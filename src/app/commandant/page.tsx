@@ -8,7 +8,7 @@ import { dictionaries } from '@/utils/dictionaries'
 import { 
   Shield, Landmark, Users, ClipboardList, CheckCircle, AlertCircle, Wrench,
   Check, LogOut, ChevronRight, Sparkles, Phone, UserPlus, Menu, X, Sun, Moon, Globe,
-  ArrowUpRight, HelpCircle, Activity, ShieldCheck
+  ArrowUpRight, HelpCircle, Activity, ShieldCheck, Bell
 } from 'lucide-react'
 
 interface Room {
@@ -41,6 +41,14 @@ export default function CommandantDashboard() {
   // Assign Student Modal state
   const [assigningBedIndex, setAssigningBedIndex] = useState<number | null>(null)
   const [newStudentName, setNewStudentName] = useState('')
+
+  // Real-time Notifications state
+  const [notifications, setNotifications] = useState([
+    { id: '1', textKg: 'Алиев Тимур (202-бөлмө) жаңы техникалык мүчүлүштүк каттады: Розетка иштебейт.', textRu: 'Алиев Тимур (комната 202) зарегистрировал новую неполадку: Не работает розетка.', textEn: 'Aliev Timur (room 202) reported a new maintenance issue: Faulty power outlet.', date: '30 мүнөт мурун', read: false },
+    { id: '2', textKg: 'Жаңы студент Маматов Бектур №201 бөлмөгө ийгиликтүү жайгаштырылды.', textRu: 'Новый студент Маматов Бектур успешно заселен в комнату №201.', textEn: 'New student Mamatov Bektur successfully assigned to room №201.', date: '2 саат мурун', read: false }
+  ])
+  const [notifOpen, setNotifOpen] = useState(false)
+  const unreadCount = notifications.filter(n => !n.read).length
   
   // Mock data for the specific dormitory
   const [stats, setStats] = useState({
@@ -131,7 +139,7 @@ export default function CommandantDashboard() {
             emptyBeds: Math.max(0, s.emptyBeds - 1)
           }))
 
-          const updated = {
+          const updated: Room = {
             ...r,
             occupied: newOccupied,
             residents: newResidents,
@@ -164,7 +172,7 @@ export default function CommandantDashboard() {
             emptyBeds: s.emptyBeds + 1
           }))
 
-          const updated = {
+          const updated: Room = {
             ...r,
             occupied: newOccupied,
             residents: newResidents,
@@ -176,6 +184,10 @@ export default function CommandantDashboard() {
         return r
       })
     )
+  }
+
+  const markAllRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })))
   }
 
   // Filtered rooms based on floor plan
@@ -199,8 +211,35 @@ export default function CommandantDashboard() {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Mobile Notifications Bell */}
+          <div className="relative">
+            <button onClick={() => setNotifOpen(!notifOpen)} className="p-2 rounded-lg dark:bg-slate-950 bg-slate-100 border dark:border-slate-850 border-slate-200 text-xs cursor-pointer relative">
+              <Bell className="w-4 h-4 text-rose-500" />
+              {unreadCount > 0 && (
+                <span className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+              )}
+            </button>
+
+            {notifOpen && (
+              <div className="absolute right-0 mt-3 w-72 rounded-2xl dark:bg-slate-900 bg-white border dark:border-slate-800 border-slate-200 shadow-xl overflow-hidden z-50 p-4 space-y-3.5 text-xs animate-fadeIn text-slate-800 dark:text-slate-100">
+                <div className="flex items-center justify-between font-bold border-b dark:border-slate-850 border-slate-200 pb-2">
+                  <span>Маалыматтар (Alerts)</span>
+                  <button onClick={markAllRead} className="text-rose-500 hover:underline text-2xs cursor-pointer">Окулду</button>
+                </div>
+                <div className="space-y-3.5 max-h-48 overflow-y-auto">
+                  {notifications.map(n => (
+                    <div key={n.id} className={`p-2.5 rounded-xl border ${n.read ? 'dark:bg-slate-900/50 bg-slate-50 border-slate-200' : 'bg-rose-500/5 border-rose-500/10'}`}>
+                      <p className="leading-relaxed text-2xs font-semibold">{language === 'kg' ? n.textKg : language === 'ru' ? n.textRu : n.textEn}</p>
+                      <span className="text-[10px] text-slate-400 mt-1 block font-medium">{n.date}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Theme switcher */}
-          <button onClick={toggleTheme} className="p-2 rounded-lg dark:bg-slate-950 bg-slate-100 border dark:border-slate-850 border-slate-200 text-xs cursor-pointer animate-pulse">
+          <button onClick={toggleTheme} className="p-2 rounded-lg dark:bg-slate-955 bg-slate-100 border dark:border-slate-850 border-slate-200 text-xs cursor-pointer animate-pulse">
             {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-500" /> : <Moon className="w-4 h-4 text-slate-700" />}
           </button>
 
@@ -349,7 +388,7 @@ export default function CommandantDashboard() {
           </nav>
         </div>
 
-        {/* Action controllers & User info */}
+        {/* Action controls & User info */}
         <div className="space-y-3">
           {/* Controllers */}
           <div className="flex items-center justify-between gap-2 p-2 dark:bg-slate-955 bg-slate-100 rounded-xl border dark:border-slate-900 border-slate-200">
@@ -396,10 +435,42 @@ export default function CommandantDashboard() {
 
       {/* MAIN CONTAINER */}
       <main className="flex-1 flex flex-col min-h-screen overflow-y-auto p-6 md:p-8 lg:p-12 z-10 animate-fadeIn">
-        {/* Header */}
-        <header className="mb-10">
-          <h2 className="text-3xl font-extrabold tracking-tight">{d.commCabinet}</h2>
-          <p className="text-sm text-slate-400 mt-1">{d.commCabinetDesc}</p>
+        {/* Desktop Header */}
+        <header className="mb-10 flex justify-between items-center">
+          <div>
+            <h2 className="text-3xl font-extrabold tracking-tight">{d.commCabinet}</h2>
+            <p className="text-sm text-slate-400 mt-1">{d.commCabinetDesc}</p>
+          </div>
+
+          {/* Desktop Notifications Bell */}
+          <div className="relative hidden lg:block">
+            <button
+              onClick={() => setNotifOpen(!notifOpen)}
+              className="p-3 rounded-2xl dark:bg-slate-900 bg-white border dark:border-slate-800 border-slate-200 hover:border-rose-550/30 transition-all shadow-sm relative cursor-pointer"
+            >
+              <Bell className="w-5 h-5 text-rose-500" />
+              {unreadCount > 0 && (
+                <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-rose-500 border-2 dark:border-slate-900 border-white" />
+              )}
+            </button>
+
+            {notifOpen && (
+              <div className="absolute right-0 mt-3 w-80 rounded-2xl dark:bg-slate-900 bg-white border dark:border-slate-800 border-slate-200 shadow-2xl overflow-hidden z-50 p-5 space-y-3.5 text-xs animate-fadeIn text-slate-800 dark:text-slate-100">
+                <div className="flex items-center justify-between font-bold border-b dark:border-slate-850 border-slate-200 pb-2">
+                  <span>Эскертүүлөр (Alerts)</span>
+                  <button onClick={markAllRead} className="text-rose-500 hover:underline text-2xs cursor-pointer">Баарын өчүрүү</button>
+                </div>
+                <div className="space-y-3 max-h-52 overflow-y-auto">
+                  {notifications.map(n => (
+                    <div key={n.id} className={`p-3 rounded-xl border ${n.read ? 'dark:bg-slate-900/50 bg-slate-50 border-slate-150' : 'bg-rose-500/5 border-rose-500/10'}`}>
+                      <p className="leading-relaxed text-2xs font-semibold">{language === 'kg' ? n.textKg : language === 'ru' ? n.textRu : n.textEn}</p>
+                      <span className="text-[10px] text-slate-400 mt-1 block font-medium">{n.date}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </header>
 
         {/* Metrics Grid */}
@@ -456,16 +527,16 @@ export default function CommandantDashboard() {
               </div>
 
               {/* Floor Switcher */}
-              <div className="flex p-1 dark:bg-slate-950 bg-slate-200/80 rounded-xl border dark:border-slate-900 border-slate-300">
+              <div className="flex p-1 dark:bg-slate-955 bg-slate-200/80 rounded-xl border dark:border-slate-900 border-slate-300">
                 <button
                   onClick={() => { setSelectedFloor(1); setSelectedRoom(null); }}
-                  className={`px-4 py-2 text-xs font-black rounded-lg transition-all cursor-pointer ${selectedFloor === 1 ? 'bg-gradient-to-r from-rose-500 to-violet-600 text-white shadow-md' : 'text-slate-500 hover:text-rose-500'}`}
+                  className={`px-4 py-2 text-xs font-black rounded-lg transition-all cursor-pointer ${selectedFloor === 1 ? 'bg-gradient-to-r from-rose-500 to-violet-605 text-white shadow-md' : 'text-slate-555 hover:text-rose-505'}`}
                 >
                   1-кабат (1st Floor)
                 </button>
                 <button
                   onClick={() => { setSelectedFloor(2); setSelectedRoom(null); }}
-                  className={`px-4 py-2 text-xs font-black rounded-lg transition-all cursor-pointer ${selectedFloor === 2 ? 'bg-gradient-to-r from-rose-500 to-violet-600 text-white shadow-md' : 'text-slate-500 hover:text-rose-500'}`}
+                  className={`px-4 py-2 text-xs font-black rounded-lg transition-all cursor-pointer ${selectedFloor === 2 ? 'bg-gradient-to-r from-rose-500 to-violet-605 text-white shadow-md' : 'text-slate-555 hover:text-rose-505'}`}
                 >
                   2-кабат (2nd Floor)
                 </button>
@@ -490,7 +561,7 @@ export default function CommandantDashboard() {
                           ? 'border-violet-600 bg-gradient-to-br from-violet-955/20 to-slate-955/20'
                           : isEmpty
                           ? 'border-dashed border-emerald-500/40 bg-emerald-500/5'
-                          : 'border-slate-350 dark:border-slate-800 dark:bg-slate-950/40 bg-slate-50'
+                          : 'border-slate-350 dark:border-slate-800 dark:bg-slate-955 bg-slate-50'
                       }`}
                     >
                       <span className="absolute top-3 right-3 flex h-2 w-2">
@@ -509,16 +580,16 @@ export default function CommandantDashboard() {
                   )
                 })}
                 {/* Empty spacer block to mimic floor plan */}
-                <div className="col-span-2 border dark:border-slate-900 border-slate-200 border-dashed rounded-2xl flex items-center justify-center text-[10px] text-slate-500 font-bold uppercase tracking-wider bg-slate-500/5">
+                <div className="col-span-2 border dark:border-slate-900 border-slate-200 border-dashed rounded-2xl flex items-center justify-center text-[10px] text-slate-555 font-bold uppercase tracking-wider bg-slate-500/5">
                   <ShieldCheck className="w-4 h-4 text-rose-500 mr-2" />
                   {language === 'kg' ? 'Окуу жана эс алуу залы' : 'Комната отдыха / Коворкинг'}
                 </div>
               </div>
 
               {/* CENTRAL HALLWAY (КОРИДОР) */}
-              <div className="w-full h-14 bg-gradient-to-r dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 from-slate-200 via-slate-100 to-slate-200 rounded-xl flex items-center justify-between px-8 border dark:border-slate-850 border-slate-300">
+              <div className="w-full h-14 bg-gradient-to-r dark:from-slate-950 dark:via-slate-900 dark:to-slate-955 from-slate-200 via-slate-100 to-slate-200 rounded-xl flex items-center justify-between px-8 border dark:border-slate-850 border-slate-300">
                 <span className="text-[10px] font-black text-slate-555 uppercase tracking-widest">{language === 'kg' ? '◀ БАШКЫ ЧЫГУУ / ВЫХОД' : '◀ ГЛАВНЫЙ ВЫХОД / EXIT'}</span>
-                <span className="text-xs font-black bg-gradient-to-r from-rose-500 to-violet-600 bg-clip-text text-transparent uppercase tracking-widest">{language === 'kg' ? 'КОРИДОР / ХОЛЛ' : 'ЦЕНТРАЛЬНЫЙ КОРИДОР'}</span>
+                <span className="text-xs font-black bg-gradient-to-r from-rose-500 to-violet-605 bg-clip-text text-transparent uppercase tracking-widest">{language === 'kg' ? 'КОРИДОР / ХОЛЛ' : 'ЦЕНТРАЛЬНЫЙ КОРИДОР'}</span>
                 <span className="text-[10px] font-black text-slate-555 uppercase tracking-widest">{language === 'kg' ? 'КҮЗӨТ / ОХРАНА ▶' : 'ПОСТ ДЕЖУРНОГО ▶'}</span>
               </div>
 
@@ -538,7 +609,7 @@ export default function CommandantDashboard() {
                           ? 'border-violet-605 bg-gradient-to-br from-violet-955/20 to-slate-955/20'
                           : isEmpty
                           ? 'border-dashed border-emerald-500/40 bg-emerald-500/5'
-                          : 'border-slate-350 dark:border-slate-800 dark:bg-slate-950/40 bg-slate-50'
+                          : 'border-slate-350 dark:border-slate-800 dark:bg-slate-955 bg-slate-50'
                       }`}
                     >
                       <span className="absolute top-3 right-3 flex h-2 w-2">
@@ -605,7 +676,7 @@ export default function CommandantDashboard() {
                         return (
                           <div 
                             key={idx} 
-                            className="flex items-center justify-between p-4 rounded-xl dark:bg-slate-955 bg-slate-50 border dark:border-slate-850 border-slate-200"
+                            className="flex items-center justify-between p-4 rounded-xl dark:bg-slate-955 bg-slate-50 border dark:border-slate-855 border-slate-200"
                           >
                             <div className="flex items-center gap-3">
                               <div className="w-8 h-8 rounded-lg dark:bg-slate-800 bg-slate-200 flex items-center justify-center font-bold text-xs text-rose-500 shrink-0">
@@ -698,12 +769,12 @@ export default function CommandantDashboard() {
                               ? 'bg-rose-500/10 border border-rose-500/20 text-rose-500 dark:text-rose-455' 
                               : ticket.urgency === 'medium'
                               ? 'bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-500'
-                              : 'dark:bg-slate-800 bg-slate-200 border dark:border-slate-700 border-slate-350 text-slate-500'
+                              : 'dark:bg-slate-800 bg-slate-200 border dark:border-slate-700 border-slate-350 text-slate-505'
                           }`}>
                             {ticket.urgency === 'high' ? d.urgencyHigh : ticket.urgency === 'medium' ? d.urgencyMedium : d.urgencyLow}
                           </span>
                         </td>
-                        <td className="py-4 px-6 text-slate-500">{ticket.date}</td>
+                        <td className="py-4 px-6 text-slate-555">{ticket.date}</td>
                         <td className="py-4 px-6">
                           {ticket.status === 'new' ? (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-bold rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-655 dark:text-amber-500">

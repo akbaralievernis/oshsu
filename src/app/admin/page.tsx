@@ -8,7 +8,7 @@ import { dictionaries } from '@/utils/dictionaries'
 import { 
   Shield, Users, Landmark, FileText, CheckCircle, XCircle, Clock, 
   Plus, Settings, LogOut, ChevronRight, Search, Filter, RefreshCw, BarChart3,
-  Menu, X, Sun, Moon, Globe
+  Menu, X, Sun, Moon, Globe, Bell
 } from 'lucide-react'
 
 export default function AdminDashboard() {
@@ -24,6 +24,14 @@ export default function AdminDashboard() {
   // Mobile drawer states
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [langMenuOpen, setLangMenuOpen] = useState(false)
+
+  // Real-time notifications state
+  const [notifications, setNotifications] = useState([
+    { id: '1', textKg: 'Асанов Алмаздын №1 Жатаканага жайгашуу боюнча арызы келип түштү.', textRu: 'Поступило новое заявление от Асанова Алмаза на заселение в Общежитие №1.', textEn: 'New application received from Asanov Almaz for Dormitory №1.', date: '1 саат мурун', read: false },
+    { id: '2', textKg: 'Комендант бөлмөлөрдүн тазалык рейтингин жаңыртты.', textRu: 'Комендант обновил рейтинг чистоты комнат.', textEn: 'The commandant updated the room cleanliness rating.', date: '4 саат мурун', read: false }
+  ])
+  const [notifOpen, setNotifOpen] = useState(false)
+  const unreadCount = notifications.filter(n => !n.read).length
   
   // Stats
   const [stats, setStats] = useState({
@@ -76,6 +84,10 @@ export default function AdminDashboard() {
     }
   }
 
+  const markAllRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })))
+  }
+
   return (
     <div className="min-h-screen transition-colors duration-300 dark:bg-slate-950 bg-slate-50 dark:text-white text-slate-900 font-sans flex flex-col lg:flex-row overflow-x-hidden">
       {/* Background Gradients */}
@@ -94,6 +106,33 @@ export default function AdminDashboard() {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Mobile Notification Bell */}
+          <div className="relative">
+            <button onClick={() => setNotifOpen(!notifOpen)} className="p-2 rounded-lg dark:bg-slate-950 bg-slate-100 border dark:border-slate-850 border-slate-200 text-xs cursor-pointer relative">
+              <Bell className="w-4 h-4 text-rose-500" />
+              {unreadCount > 0 && (
+                <span className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+              )}
+            </button>
+
+            {notifOpen && (
+              <div className="absolute right-0 mt-3 w-72 rounded-2xl dark:bg-slate-900 bg-white border dark:border-slate-800 border-slate-200 shadow-xl overflow-hidden z-50 p-4 space-y-3.5 text-xs animate-fadeIn text-slate-800 dark:text-slate-100">
+                <div className="flex items-center justify-between font-bold border-b dark:border-slate-850 border-slate-200 pb-2">
+                  <span>Журнал кабарлары</span>
+                  <button onClick={markAllRead} className="text-rose-500 hover:underline text-2xs cursor-pointer">Окулду</button>
+                </div>
+                <div className="space-y-3.5 max-h-48 overflow-y-auto">
+                  {notifications.map(n => (
+                    <div key={n.id} className={`p-2.5 rounded-xl border ${n.read ? 'dark:bg-slate-900/50 bg-slate-50 border-slate-200' : 'bg-rose-500/5 border-rose-500/10'}`}>
+                      <p className="leading-relaxed text-2xs font-semibold">{language === 'kg' ? n.textKg : language === 'ru' ? n.textRu : n.textEn}</p>
+                      <span className="text-[10px] text-slate-400 mt-1 block font-medium">{n.date}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Theme switcher */}
           <button onClick={toggleTheme} className="p-2 rounded-lg dark:bg-slate-950 bg-slate-100 border dark:border-slate-850 border-slate-200 text-xs cursor-pointer animate-pulse">
             {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-500" /> : <Moon className="w-4 h-4 text-slate-700" />}
@@ -262,7 +301,7 @@ export default function AdminDashboard() {
         {/* User Info / Toggles / Logout */}
         <div className="space-y-3">
           {/* Controllers */}
-          <div className="flex items-center justify-between gap-2 p-2 dark:bg-slate-950 bg-slate-100 rounded-xl border dark:border-slate-900 border-slate-200">
+          <div className="flex items-center justify-between gap-2 p-2 dark:bg-slate-955 bg-slate-100 rounded-xl border dark:border-slate-900 border-slate-200">
             <button 
               onClick={toggleTheme} 
               className="flex-1 p-2 rounded-lg hover:bg-rose-500/10 text-slate-500 hover:text-rose-500 transition-colors flex justify-center cursor-pointer"
@@ -306,20 +345,52 @@ export default function AdminDashboard() {
 
       {/* MAIN CONTAINER */}
       <main className="flex-1 flex flex-col min-h-screen overflow-y-auto p-6 md:p-8 lg:p-12 z-10 animate-fadeIn">
-        {/* Header */}
+        {/* Desktop Header */}
         <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-10">
           <div>
             <h2 className="text-3xl font-extrabold tracking-tight">{d.adminCabinet}</h2>
             <p className="text-sm text-slate-400 mt-1">{d.adminCabinetDesc}</p>
           </div>
           
-          <button 
-            onClick={() => setLoading(true)}
-            className="flex items-center gap-2 px-4 py-2.5 dark:bg-slate-900 bg-white border dark:border-slate-800 border-slate-200 text-xs font-semibold rounded-xl hover:bg-slate-50 dark:hover:bg-slate-850 transition-all cursor-pointer"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 text-rose-500 ${loading ? 'animate-spin' : ''}`} />
-            {d.btnRefresh}
-          </button>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            {/* Desktop Notification Bell */}
+            <div className="relative">
+              <button
+                onClick={() => setNotifOpen(!notifOpen)}
+                className="p-3 rounded-2xl dark:bg-slate-900 bg-white border dark:border-slate-800 border-slate-200 hover:border-rose-550/30 transition-all shadow-sm relative cursor-pointer"
+              >
+                <Bell className="w-5 h-5 text-rose-500" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-rose-500 border-2 dark:border-slate-905 border-white" />
+                )}
+              </button>
+
+              {notifOpen && (
+                <div className="absolute right-0 mt-3 w-80 rounded-2xl dark:bg-slate-900 bg-white border dark:border-slate-800 border-slate-200 shadow-2xl overflow-hidden z-50 p-5 space-y-3.5 text-xs animate-fadeIn text-slate-800 dark:text-slate-100">
+                  <div className="flex items-center justify-between font-bold border-b dark:border-slate-850 border-slate-200 pb-2">
+                    <span>Системалык билдирүүлөр</span>
+                    <button onClick={markAllRead} className="text-rose-500 hover:underline text-2xs cursor-pointer">Жок кылуу</button>
+                  </div>
+                  <div className="space-y-3 max-h-52 overflow-y-auto">
+                    {notifications.map(n => (
+                      <div key={n.id} className={`p-3 rounded-xl border ${n.read ? 'dark:bg-slate-900/50 bg-slate-50 border-slate-150' : 'bg-rose-500/5 border-rose-500/10'}`}>
+                        <p className="leading-relaxed text-2xs font-semibold">{language === 'kg' ? n.textKg : language === 'ru' ? n.textRu : n.textEn}</p>
+                        <span className="text-[10px] text-slate-400 mt-1 block font-medium">{n.date}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <button 
+              onClick={() => setLoading(true)}
+              className="flex items-center justify-center gap-2 px-4 py-3 dark:bg-slate-900 bg-white border dark:border-slate-800 border-slate-200 text-xs font-semibold rounded-xl hover:bg-slate-50 dark:hover:bg-slate-850 transition-all cursor-pointer flex-1 sm:flex-initial"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 text-rose-500 ${loading ? 'animate-spin' : ''}`} />
+              {d.btnRefresh}
+            </button>
+          </div>
         </header>
 
         {/* Tab 1: Overview */}
@@ -348,7 +419,7 @@ export default function AdminDashboard() {
               </div>
 
               <div className="p-6 rounded-3xl dark:bg-slate-900/40 bg-white border dark:border-slate-900 border-slate-200 flex items-center gap-5 shadow-sm">
-                <div className="p-4 rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/10">
+                <div className="p-4 rounded-2xl bg-rose-500/10 text-rose-505 border border-rose-500/10">
                   <FileText className="w-6 h-6" />
                 </div>
                 <div>
@@ -358,7 +429,7 @@ export default function AdminDashboard() {
               </div>
 
               <div className="p-6 rounded-3xl dark:bg-slate-900/40 bg-white border dark:border-slate-900 border-slate-200 flex items-center gap-5 shadow-sm">
-                <div className="p-4 rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/10">
+                <div className="p-4 rounded-2xl bg-rose-500/10 text-rose-505 border border-rose-500/10">
                   <Clock className="w-6 h-6" />
                 </div>
                 <div>
@@ -403,7 +474,7 @@ export default function AdminDashboard() {
                 <h3 className="text-xl font-bold">{d.quickActionsTitle}</h3>
                 
                 <div className="space-y-3">
-                  <button className="w-full flex items-center justify-center gap-2.5 py-3.5 bg-gradient-to-r from-rose-500 to-violet-600 hover:brightness-110 text-white font-bold rounded-2xl shadow-lg transition-all duration-300 cursor-pointer">
+                  <button className="w-full flex items-center justify-center gap-2.5 py-3.5 bg-gradient-to-r from-rose-500 to-violet-605 hover:brightness-110 text-white font-bold rounded-2xl shadow-lg transition-all duration-300 cursor-pointer">
                     <Plus className="w-5 h-5 shrink-0" />
                     {d.btnAddDorm}
                   </button>
@@ -491,7 +562,7 @@ export default function AdminDashboard() {
                               </button>
                               <button 
                                 onClick={() => updateAppStatus(app.id, 'rejected')}
-                                className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-650 dark:text-rose-455 transition-colors cursor-pointer"
+                                className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-655 dark:text-rose-455 transition-colors cursor-pointer"
                               >
                                 <XCircle className="w-4 h-4" />
                               </button>
@@ -514,7 +585,7 @@ export default function AdminDashboard() {
           <div className="space-y-6 animate-fadeIn">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <h3 className="text-xl font-bold">{d.dormListTitle}</h3>
-              <button className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-rose-500 to-violet-600 hover:brightness-110 text-white font-bold rounded-xl shadow-lg transition-all duration-300 cursor-pointer">
+              <button className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-rose-500 to-violet-605 hover:brightness-110 text-white font-bold rounded-xl shadow-lg transition-all duration-300 cursor-pointer">
                 <Plus className="w-4 h-4" />
                 {d.btnAddDorm}
               </button>
@@ -544,7 +615,7 @@ export default function AdminDashboard() {
                       </div>
                       <div className="h-2 w-full dark:bg-slate-955 bg-slate-100 rounded-full overflow-hidden border dark:border-slate-900 border-slate-200">
                         <div 
-                          className="h-full bg-gradient-to-r from-rose-500 to-violet-600 rounded-full" 
+                          className="h-full bg-gradient-to-r from-rose-500 to-violet-605 rounded-full" 
                           style={{ width: `${percentage}%` }}
                         />
                       </div>

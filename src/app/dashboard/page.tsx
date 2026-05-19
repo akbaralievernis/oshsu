@@ -8,7 +8,7 @@ import { dictionaries } from '@/utils/dictionaries'
 import { 
   Shield, Landmark, Users, ClipboardList, CheckCircle, AlertCircle, Wrench,
   Check, LogOut, ChevronRight, Sparkles, MapPin, User, FileText, Send,
-  Menu, X, Sun, Moon, Globe, Printer
+  Menu, X, Sun, Moon, Globe, Printer, Bell
 } from 'lucide-react'
 
 export default function StudentDashboard() {
@@ -26,6 +26,14 @@ export default function StudentDashboard() {
   // Mobile navigation drawer state
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [langMenuOpen, setLangMenuOpen] = useState(false)
+
+  // Notifications State
+  const [notifications, setNotifications] = useState([
+    { id: '1', textKg: 'Сиздин №102 бөлмөгө жайгашуу боюнча арызыңыз комендант тарабынан жактырылды!', textRu: 'Ваша заявка на заселение в комнату №102 одобрена комендантом!', textEn: 'Your room assignment application for room №102 has been approved!', date: '1 саат мурун', read: false },
+    { id: '2', textKg: 'Ижара акысы боюнча жаңы эсеп катталды. Төлөм жүргүзүңүз.', textRu: 'Выставлен новый счет за проживание. Пожалуйста, оплатите.', textEn: 'A new rental invoice has been generated. Please proceed to payment.', date: '3 саат мурун', read: false }
+  ])
+  const [notifOpen, setNotifOpen] = useState(false)
+  const unreadCount = notifications.filter(n => !n.read).length
 
   // Mock data for student housing details
   const [hasRoom, setHasRoom] = useState(true)
@@ -83,8 +91,12 @@ export default function StudentDashboard() {
     }
   }
 
+  const markAllRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })))
+  }
+
   return (
-    <div className="min-h-screen transition-colors duration-300 dark:bg-slate-950 bg-slate-50 dark:text-white text-slate-900 font-sans flex flex-col lg:flex-row overflow-x-hidden">
+    <div className="min-h-screen transition-colors duration-300 dark:bg-slate-955 bg-slate-50 dark:text-white text-slate-900 font-sans flex flex-col lg:flex-row overflow-x-hidden">
       {/* Background Glows */}
       <div className="absolute top-0 left-0 w-[300px] h-[300px] rounded-full dark:bg-slate-900 bg-rose-100/30 blur-[150px] opacity-60 pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full dark:bg-violet-955/10 bg-violet-100/30 blur-[150px] opacity-40 pointer-events-none" />
@@ -101,6 +113,36 @@ export default function StudentDashboard() {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Notifications Trigger Mobile */}
+          <div className="relative">
+            <button
+              onClick={() => setNotifOpen(!notifOpen)}
+              className="p-2 rounded-lg dark:bg-slate-955 bg-slate-100 border dark:border-slate-850 border-slate-200 text-xs cursor-pointer relative"
+            >
+              <Bell className="w-4 h-4 text-rose-555" />
+              {unreadCount > 0 && (
+                <span className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+              )}
+            </button>
+
+            {notifOpen && (
+              <div className="absolute right-0 mt-3 w-72 rounded-2xl dark:bg-slate-900 bg-white border dark:border-slate-800 border-slate-200 shadow-xl overflow-hidden z-50 p-4 space-y-3 text-xs animate-fadeIn text-slate-850 dark:text-slate-100">
+                <div className="flex items-center justify-between font-bold border-b dark:border-slate-850 border-slate-200 pb-2">
+                  <span>Жаңылыктар (Notifications)</span>
+                  <button onClick={markAllRead} className="text-rose-500 hover:underline text-2xs cursor-pointer">Баарын окудум</button>
+                </div>
+                <div className="space-y-3.5 max-h-48 overflow-y-auto">
+                  {notifications.map(n => (
+                    <div key={n.id} className={`p-2.5 rounded-xl border ${n.read ? 'dark:bg-slate-900/50 bg-slate-50 border-slate-200 dark:border-slate-800' : 'bg-rose-500/5 border-rose-500/10'}`}>
+                      <p className="leading-relaxed text-2xs font-semibold">{language === 'kg' ? n.textKg : language === 'ru' ? n.textRu : n.textEn}</p>
+                      <span className="text-[10px] text-slate-400 mt-1 block font-medium">{n.date}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Theme Switcher */}
           <button
             onClick={toggleTheme}
@@ -112,7 +154,7 @@ export default function StudentDashboard() {
           {/* Language menu */}
           <button
             onClick={() => setLangMenuOpen(!langMenuOpen)}
-            className="flex items-center gap-1 px-2.5 py-2 rounded-lg dark:bg-slate-955 bg-slate-100 border dark:border-slate-850 border-slate-200 text-xs font-bold cursor-pointer"
+            className="flex items-center gap-1 px-2.5 py-2 rounded-lg dark:bg-slate-955 bg-slate-100 border dark:border-slate-855 border-slate-200 text-xs font-bold cursor-pointer"
           >
             <Globe className="w-3.5 h-3.5 text-rose-500" />
             <span className="uppercase">{language}</span>
@@ -247,10 +289,42 @@ export default function StudentDashboard() {
 
       {/* MAIN CONTENT CONTAINER */}
       <main className="flex-1 flex flex-col min-h-screen overflow-y-auto p-6 md:p-8 lg:p-12 z-10 animate-fadeIn">
-        {/* Header */}
-        <header className="mb-8">
-          <h2 className="text-3xl font-extrabold tracking-tight">{d.studentCabinet}</h2>
-          <p className="text-sm text-slate-400 mt-1">{d.studentCabinetDesc}</p>
+        {/* Desktop Header */}
+        <header className="mb-8 flex justify-between items-center">
+          <div>
+            <h2 className="text-3xl font-extrabold tracking-tight">{d.studentCabinet}</h2>
+            <p className="text-sm text-slate-400 mt-1">{d.studentCabinetDesc}</p>
+          </div>
+
+          {/* Desktop Notifications Trigger */}
+          <div className="relative hidden lg:block">
+            <button
+              onClick={() => setNotifOpen(!notifOpen)}
+              className="p-3 rounded-2xl dark:bg-slate-900 bg-white border dark:border-slate-800 border-slate-200 hover:border-rose-550/30 transition-all shadow-sm relative cursor-pointer"
+            >
+              <Bell className="w-5 h-5 text-rose-500" />
+              {unreadCount > 0 && (
+                <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-rose-500 border-2 dark:border-slate-900 border-white" />
+              )}
+            </button>
+
+            {notifOpen && (
+              <div className="absolute right-0 mt-3 w-80 rounded-2xl dark:bg-slate-900 bg-white border dark:border-slate-800 border-slate-200 shadow-2xl overflow-hidden z-50 p-5 space-y-3.5 text-xs animate-fadeIn text-slate-800 dark:text-slate-100">
+                <div className="flex items-center justify-between font-bold border-b dark:border-slate-850 border-slate-200 pb-2">
+                  <span>Кабарлар (Notifications)</span>
+                  <button onClick={markAllRead} className="text-rose-500 hover:underline text-2xs cursor-pointer">Баарын окудум</button>
+                </div>
+                <div className="space-y-3 max-h-52 overflow-y-auto">
+                  {notifications.map(n => (
+                    <div key={n.id} className={`p-3 rounded-xl border ${n.read ? 'dark:bg-slate-900/50 bg-slate-50 border-slate-150 dark:border-slate-800' : 'bg-rose-500/5 border-rose-500/10'}`}>
+                      <p className="leading-relaxed text-2xs font-semibold">{language === 'kg' ? n.textKg : language === 'ru' ? n.textRu : n.textEn}</p>
+                      <span className="text-[10px] text-slate-400 mt-1 block font-medium">{n.date}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </header>
 
         {/* Main Grid Layout */}
@@ -281,7 +355,7 @@ export default function StudentDashboard() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 rounded-2xl dark:bg-slate-950 bg-slate-100 border dark:border-slate-900 border-slate-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 rounded-2xl dark:bg-slate-955 bg-slate-100 border dark:border-slate-900 border-slate-200">
                   <div className="space-y-1">
                     <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{d.dormNameLabel}</div>
                     <div className="text-sm font-bold flex items-center gap-1.5">
@@ -441,7 +515,7 @@ export default function StudentDashboard() {
       <div id="printable-contract" className="hidden print:block p-10 leading-relaxed text-black max-w-4xl mx-auto">
         {/* Kyrgyz Republic Coat of Arms Reference / Header */}
         <div className="text-center space-y-2 border-b-2 border-black pb-5">
-          <h2 className="text-sm font-extrabold uppercase tracking-wide">Кыргыз Республикасынын Билим берүү жана илим министрлиги</h2>
+          <h2 className="text-sm font-extrabold uppercase tracking-wide">Кыргыз Republicсынын Билим берүү жана илим министрлиги</h2>
           <h1 className="text-lg font-black uppercase tracking-wider">ОШ МАМЛЕКЕТТИК УНИВЕРСИТЕТИ (ОшМУ)</h1>
           <p className="text-xs font-bold italic">Студенттик жатаканада жашоо укугу жөнүндө эки тараптуу КЕЛИШИМ / Двусторонний ДОГОВОР</p>
         </div>
