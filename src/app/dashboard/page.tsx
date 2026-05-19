@@ -8,7 +8,7 @@ import { dictionaries } from '@/utils/dictionaries'
 import { 
   Shield, Landmark, Users, ClipboardList, CheckCircle, AlertCircle, Wrench,
   Check, LogOut, ChevronRight, Sparkles, MapPin, User, FileText, Send,
-  Menu, X, Sun, Moon, Globe
+  Menu, X, Sun, Moon, Globe, Printer
 } from 'lucide-react'
 
 export default function StudentDashboard() {
@@ -76,11 +76,18 @@ export default function StudentDashboard() {
     }, 1200)
   }
 
+  // Trigger print-to-PDF
+  const handlePrintContract = () => {
+    if (typeof window !== 'undefined') {
+      window.print()
+    }
+  }
+
   return (
     <div className="min-h-screen transition-colors duration-300 dark:bg-slate-950 bg-slate-50 dark:text-white text-slate-900 font-sans flex flex-col lg:flex-row overflow-x-hidden">
       {/* Background Glows */}
       <div className="absolute top-0 left-0 w-[300px] h-[300px] rounded-full dark:bg-slate-900 bg-rose-100/30 blur-[150px] opacity-60 pointer-events-none" />
-      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full dark:bg-violet-950/10 bg-violet-105/30 blur-[150px] opacity-40 pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full dark:bg-violet-955/10 bg-violet-100/30 blur-[150px] opacity-40 pointer-events-none" />
 
       {/* MOBILE HEADER */}
       <header className="lg:hidden w-full flex items-center justify-between px-6 py-4 dark:bg-slate-900/80 bg-white border-b dark:border-slate-900 border-slate-200 backdrop-blur-lg sticky top-0 z-35 shadow-sm transition-colors">
@@ -97,7 +104,7 @@ export default function StudentDashboard() {
           {/* Theme Switcher */}
           <button
             onClick={toggleTheme}
-            className="p-2 rounded-lg dark:bg-slate-950 bg-slate-100 border dark:border-slate-850 border-slate-200 text-xs cursor-pointer animate-pulse"
+            className="p-2 rounded-lg dark:bg-slate-955 bg-slate-100 border dark:border-slate-850 border-slate-200 text-xs cursor-pointer animate-pulse"
           >
             {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-500" /> : <Moon className="w-4 h-4 text-slate-700" />}
           </button>
@@ -105,7 +112,7 @@ export default function StudentDashboard() {
           {/* Language menu */}
           <button
             onClick={() => setLangMenuOpen(!langMenuOpen)}
-            className="flex items-center gap-1 px-2.5 py-2 rounded-lg dark:bg-slate-950 bg-slate-100 border dark:border-slate-855 border-slate-200 text-xs font-bold cursor-pointer"
+            className="flex items-center gap-1 px-2.5 py-2 rounded-lg dark:bg-slate-955 bg-slate-100 border dark:border-slate-850 border-slate-200 text-xs font-bold cursor-pointer"
           >
             <Globe className="w-3.5 h-3.5 text-rose-500" />
             <span className="uppercase">{language}</span>
@@ -138,7 +145,7 @@ export default function StudentDashboard() {
           >
             <div className="space-y-6">
               {/* Profile Card */}
-              <div className="p-4 rounded-2xl dark:bg-slate-950 bg-slate-100 border dark:border-slate-855 border-slate-200 space-y-4">
+              <div className="p-4 rounded-2xl dark:bg-slate-955 bg-slate-100 border dark:border-slate-855 border-slate-200 space-y-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-slate-855 dark:bg-slate-800 flex items-center justify-center border border-slate-255 dark:border-slate-700 font-bold text-rose-500 shadow-md">
                     {studentName[0].toUpperCase()}
@@ -193,11 +200,11 @@ export default function StudentDashboard() {
             {hasRoom && (
               <div className="space-y-2 border-t dark:border-slate-900 border-slate-200 pt-3 text-xs">
                 <div className="flex justify-between">
-                  <span className="text-slate-555 text-slate-500 font-semibold">{d.dormNameLabel}:</span>
+                  <span className="text-slate-500 font-semibold">{d.dormNameLabel}:</span>
                   <span className="dark:text-slate-300 text-slate-700 font-bold text-right truncate max-w-[130px]">№1 Жатакана</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-555 text-slate-500 font-semibold">Бөлмө:</span>
+                  <span className="text-slate-500 font-semibold">Бөлмө:</span>
                   <span className="text-rose-500 font-extrabold">{assignedRoom.roomNumber} ({assignedRoom.floor}-кабат)</span>
                 </div>
               </div>
@@ -211,7 +218,7 @@ export default function StudentDashboard() {
           <div className="flex items-center justify-between gap-2 p-2 dark:bg-slate-950 bg-slate-100 rounded-xl border dark:border-slate-900 border-slate-200">
             <button 
               onClick={toggleTheme} 
-              className="flex-1 p-2 rounded-lg hover:bg-rose-500/10 text-slate-500 hover:text-rose-600 transition-colors flex justify-center cursor-pointer"
+              className="flex-1 p-2 rounded-lg hover:bg-rose-500/10 text-slate-500 hover:text-rose-650 transition-colors flex justify-center cursor-pointer"
               title="Темный / Светлый режим"
             >
               {theme === 'dark' ? <Sun className="w-4.5 h-4.5 text-amber-500" /> : <Moon className="w-4.5 h-4.5" />}
@@ -252,14 +259,26 @@ export default function StudentDashboard() {
           <div className="lg:col-span-2 space-y-8">
             {hasRoom ? (
               <div className="p-6 md:p-8 rounded-3xl dark:bg-slate-900/30 bg-white border dark:border-slate-900 border-slate-200 shadow-md space-y-6">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <h3 className="text-xl font-bold flex items-center gap-2">
                     <Sparkles className="w-5 h-5 text-rose-500" />
                     {d.roomInfo}
                   </h3>
-                  <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-605 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider">
-                    {d.assignedStatus}
-                  </span>
+                  
+                  <div className="flex items-center gap-2">
+                    {/* DOWNLOAD AGREEMENT PDF TRIGGER BUTTON */}
+                    <button
+                      onClick={handlePrintContract}
+                      className="flex items-center gap-1.5 px-4.5 py-2.5 bg-gradient-to-r from-rose-500 to-violet-600 hover:brightness-110 text-white text-xs font-black rounded-xl transition-all cursor-pointer shadow-md shadow-rose-500/10"
+                    >
+                      <Printer className="w-4 h-4 shrink-0 animate-pulse" />
+                      {language === 'kg' ? 'Келишимди жүктөө (PDF)' : language === 'ru' ? 'Скачать Договор (PDF)' : 'Download Contract (PDF)'}
+                    </button>
+
+                    <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-605 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider shrink-0">
+                      {d.assignedStatus}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 rounded-2xl dark:bg-slate-950 bg-slate-100 border dark:border-slate-900 border-slate-200">
@@ -381,7 +400,7 @@ export default function StudentDashboard() {
                     value={ticketTitle}
                     onChange={(e) => setTicketTitle(e.target.value)}
                     placeholder={d.ticketPlaceholder}
-                    className="w-full dark:bg-slate-950 bg-white border dark:border-slate-900 border-slate-200 dark:text-white text-slate-900 rounded-xl py-3 px-4 placeholder-slate-400 dark:placeholder-slate-700 text-xs focus:outline-none focus:ring-1 focus:ring-rose-500 focus:border-rose-500 transition-all"
+                    className="w-full dark:bg-slate-955 bg-white border dark:border-slate-900 border-slate-200 dark:text-white text-slate-900 rounded-xl py-3 px-4 placeholder-slate-400 dark:placeholder-slate-700 text-xs focus:outline-none focus:ring-1 focus:ring-rose-500 focus:border-rose-500 transition-all"
                   />
                 </div>
 
@@ -390,7 +409,7 @@ export default function StudentDashboard() {
                   <select
                     value={ticketUrgency}
                     onChange={(e) => setTicketUrgency(e.target.value)}
-                    className="w-full dark:bg-slate-950 bg-white border dark:border-slate-900 border-slate-200 dark:text-white text-slate-900 rounded-xl py-3 px-4 text-xs focus:outline-none focus:ring-1 focus:ring-rose-500 focus:border-rose-500 transition-all cursor-pointer"
+                    className="w-full dark:bg-slate-955 bg-white border dark:border-slate-900 border-slate-200 dark:text-white text-slate-900 rounded-xl py-3 px-4 text-xs focus:outline-none focus:ring-1 focus:ring-rose-500 focus:border-rose-500 transition-all cursor-pointer"
                   >
                     <option value="low">{d.ticketUrgencyLow}</option>
                     <option value="medium">{d.ticketUrgencyMedium}</option>
@@ -417,6 +436,88 @@ export default function StudentDashboard() {
           </div>
         </div>
       </main>
+
+      {/* HIDDEN PRINT-ONLY BILATERAL RENTAL AGREEMENT */}
+      <div id="printable-contract" className="hidden print:block p-10 leading-relaxed text-black max-w-4xl mx-auto">
+        {/* Kyrgyz Republic Coat of Arms Reference / Header */}
+        <div className="text-center space-y-2 border-b-2 border-black pb-5">
+          <h2 className="text-sm font-extrabold uppercase tracking-wide">Кыргыз Республикасынын Билим берүү жана илим министрлиги</h2>
+          <h1 className="text-lg font-black uppercase tracking-wider">ОШ МАМЛЕКЕТТИК УНИВЕРСИТЕТИ (ОшМУ)</h1>
+          <p className="text-xs font-bold italic">Студенттик жатаканада жашоо укугу жөнүндө эки тараптуу КЕЛИШИМ / Двусторонний ДОГОВОР</p>
+        </div>
+
+        {/* Contract Title & Number */}
+        <div className="mt-8 flex justify-between text-xs font-bold">
+          <span>Келишим № {Math.floor(1000 + Math.random() * 9000)}-OshSU</span>
+          <span>Күнү / Дата: {new Date().toLocaleDateString('ru-RU')}</span>
+        </div>
+
+        {/* Parties involved */}
+        <div className="mt-6 text-2xs space-y-4 text-justify">
+          <p>
+            Мындан ары <strong>«Берүүчү»</strong> деп аталуучу Ош мамлекеттик университетинин дирекциясынын атынан тиешелүү комендант бир тараптан, жана мындан ары <strong>«Жашоочу»</strong> деп аталуучу студент <strong>{studentName}</strong> экинчи тараптан, төмөнкү шарттардын негизинде ушул келишимди түзүштү:
+          </p>
+          <p className="italic text-gray-700">
+            Настоящий договор заключен между администрацией Ошского государственного университета (ОшГУ) в лице коменданта, именуемым в дальнейшем <strong>«Наймодатель»</strong>, с одной стороны, и студентом <strong>{studentName}</strong>, именуемым в дальнейшем <strong>«Наниматель»</strong>, с другой стороны, о нижеследующем:
+          </p>
+        </div>
+
+        {/* Section 1: Subject of Contract */}
+        <div className="mt-6 space-y-2">
+          <h3 className="text-xs font-bold uppercase tracking-wider">1. КЕЛИШИМДИН ПРЕДМЕТИ / ПРЕДМЕТ ДОГОВОРА</h3>
+          <ul className="list-decimal pl-5 text-2xs space-y-1.5 text-justify">
+            <li>
+              <strong>Берүүчү</strong> жашоочуга <u>{assignedRoom.dormName}</u> дарегиндеги общежитиеден убактылуу жашоо үчүн <strong>{assignedRoom.roomNumber}-бөлмөдөн</strong> орун (кабат: {assignedRoom.floor}) берет.
+            </li>
+            <li className="italic text-gray-700">
+              Наймодатель предоставляет Нанимателю койко-место в <strong>комнате №{assignedRoom.roomNumber}</strong> (этаж: {assignedRoom.floor}) в студенческом общежитии по адресу: <u>{assignedRoom.dormName}</u>.
+            </li>
+          </ul>
+        </div>
+
+        {/* Section 2: Rights & Duties */}
+        <div className="mt-6 space-y-2">
+          <h3 className="text-xs font-bold uppercase tracking-wider">2. ТАРАПТАРДЫН МИЛДЕТТЕРИ / ОБЯЗАННОСТИ СТОРОН</h3>
+          <ul className="list-decimal pl-5 text-2xs space-y-1.5 text-justify">
+            <li><strong>Жашоочу милдеттенет / Наниматель обязуется:</strong></li>
+            <ul className="list-disc pl-5 space-y-1 text-slate-700">
+              <li>Жатакананын эрежелерин жана тартибин толук сактоого. / Соблюдать правила внутреннего распорядка общежития.</li>
+              <li>Ижара акысын жана коммуналдык кызматтарды өз убагында төлөөгө. / Своевременно оплачивать проживание и коммунальные услуги.</li>
+              <li>Бөлмөдө тазалыкты жана техникалык коопсуздукту сактоого. / Поддерживать чистоту в комнате и соблюдать правила пожарной безопасности.</li>
+            </ul>
+            <li><strong>Берүүчү милдеттенет / Наймодатель обязуется:</strong></li>
+            <ul className="list-disc pl-5 space-y-1 text-slate-700">
+              <li>Турмуш-тиричиликке керектүү шарттарды түзүп берүүгө. / Предоставить необходимые жилищно-бытовые условия.</li>
+              <li>Жатакананын коопсуздугун 24/7 камсыздоого. / Обеспечить круглосуточную охрану и безопасность в здании.</li>
+            </ul>
+          </ul>
+        </div>
+
+        {/* Section 3: Force Majeure & Special Rules */}
+        <div className="mt-6 space-y-2">
+          <h3 className="text-xs font-bold uppercase tracking-wider">3. ӨЗГӨЧӨ ШАРТТАР / ОСОБЫЕ УСЛОВИЯ</h3>
+          <p className="text-2xs text-justify">
+            Ушул келишим эки тарап тең кол койгон учурдан тартып күчүнө кирет жана бир окуу жылына жарактуу болуп эсептелет. Шарттар бузулган учурда келишим мөөнөтүнөн мурда жокко чыгарылышы мүмкүн.
+          </p>
+          <p className="text-2xs text-justify italic text-gray-700">
+            Настоящий договор вступает в силу с момента его подписания обеими сторонами и действует в течение одного учебного года. В случае нарушения правил проживания договор может быть расторгнут в одностороннем порядке.
+          </p>
+        </div>
+
+        {/* Signatures with Seal Placeholder */}
+        <div className="mt-16 grid grid-cols-2 gap-12 text-xs font-bold pt-8 border-t border-dashed border-gray-400">
+          <div className="space-y-6">
+            <div>ОшМУ ЖАТАКАНА ДИРЕКЦИЯСЫ / АДМИНИСТРАЦИЯ:</div>
+            <div className="h-10 border-b border-black w-48" />
+            <div className="text-2xs text-gray-500 italic">Колу жана Мөөр орду / Подпись и место печати (М.П.)</div>
+          </div>
+          <div className="space-y-6">
+            <div>СТУДЕНТ / ЖАШООЧУ:</div>
+            <div className="h-10 border-b border-black w-48" />
+            <div className="text-2xs text-gray-500 italic">Студенттин колу / Подпись нанимателя</div>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
