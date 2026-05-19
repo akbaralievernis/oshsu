@@ -142,7 +142,7 @@ export default function LoginPage() {
       <div className="absolute top-6 right-6 z-50 flex items-center gap-2">
         <button
           onClick={toggleTheme}
-          className="p-2.5 rounded-xl dark:bg-slate-900 bg-white border dark:border-slate-800 border-slate-200 hover:border-red-500/35 transition-all shadow-sm"
+          className="p-2.5 rounded-xl dark:bg-slate-900 bg-white border dark:border-slate-800 border-slate-200 hover:border-rose-500/35 transition-all shadow-sm cursor-pointer"
           title="Светлая / Темная тема"
         >
           {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-500" /> : <Moon className="w-4 h-4 text-slate-700" />}
@@ -151,9 +151,9 @@ export default function LoginPage() {
         <div className="relative">
           <button
             onClick={() => setLangMenuOpen(!langMenuOpen)}
-            className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl dark:bg-slate-900 bg-white border dark:border-slate-800 border-slate-200 text-xs font-bold shadow-sm"
+            className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl dark:bg-slate-900 bg-white border dark:border-slate-800 border-slate-200 text-xs font-bold shadow-sm cursor-pointer"
           >
-            <Globe className="w-4 h-4 text-red-600" />
+            <Globe className="w-4 h-4 text-rose-500" />
             <span className="uppercase">{language}</span>
           </button>
 
@@ -161,19 +161,19 @@ export default function LoginPage() {
             <div className="absolute right-0 mt-2 w-32 rounded-2xl dark:bg-slate-900 bg-white border dark:border-slate-800 border-slate-200 shadow-xl overflow-hidden animate-fadeIn z-50">
               <button
                 onClick={() => { setLanguage('kg'); setLangMenuOpen(false); }}
-                className={`w-full px-4 py-3 text-left text-xs font-bold hover:bg-red-500/10 transition-colors ${language === 'kg' ? 'text-red-600' : ''}`}
+                className={`w-full px-4 py-3 text-left text-xs font-bold hover:bg-rose-500/10 transition-colors cursor-pointer ${language === 'kg' ? 'text-rose-500' : ''}`}
               >
                 Кыргызча
               </button>
               <button
                 onClick={() => { setLanguage('ru'); setLangMenuOpen(false); }}
-                className={`w-full px-4 py-3 text-left text-xs font-bold hover:bg-red-500/10 transition-colors ${language === 'ru' ? 'text-red-600' : ''}`}
+                className={`w-full px-4 py-3 text-left text-xs font-bold hover:bg-rose-500/10 transition-colors cursor-pointer ${language === 'ru' ? 'text-rose-500' : ''}`}
               >
                 Русский
               </button>
               <button
                 onClick={() => { setLanguage('en'); setLangMenuOpen(false); }}
-                className={`w-full px-4 py-3 text-left text-xs font-bold hover:bg-red-500/10 transition-colors ${language === 'en' ? 'text-red-600' : ''}`}
+                className={`w-full px-4 py-3 text-left text-xs font-bold hover:bg-rose-500/10 transition-colors cursor-pointer ${language === 'en' ? 'text-rose-500' : ''}`}
               >
                 English
               </button>
@@ -183,14 +183,14 @@ export default function LoginPage() {
       </div>
 
       {/* Background Glow effects */}
-      <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full dark:bg-slate-900 bg-red-100/50 blur-[150px] opacity-60 pointer-events-none" />
-      <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full dark:bg-red-950/20 bg-rose-100/50 blur-[150px] opacity-40 pointer-events-none" />
+      <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full dark:bg-slate-900 bg-rose-100/30 blur-[150px] opacity-60 pointer-events-none" />
+      <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full dark:bg-violet-950/20 bg-violet-100/30 blur-[150px] opacity-40 pointer-events-none" />
 
       <div className="w-full max-w-md z-10 space-y-8">
         {/* Logo / Header */}
         <div className="text-center">
           <div className="inline-flex items-center justify-center p-3 rounded-full bg-gradient-to-br dark:from-slate-900 dark:to-slate-800 from-slate-100 to-slate-50 border dark:border-slate-800 border-slate-200 shadow-xl mb-4">
-            <Shield className="w-10 h-10 text-red-600 animate-pulse" />
+            <Shield className="w-10 h-10 text-rose-500 animate-pulse" />
           </div>
           <h2 className="text-3xl font-extrabold tracking-tight dark:text-white text-slate-900 sm:text-4xl">
             {d.authTitle}
@@ -210,10 +210,10 @@ export default function LoginPage() {
                 setErrorMsg(null)
                 setSuccessMsg(null)
               }}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold rounded-xl transition-all duration-300 ${
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold rounded-xl transition-all duration-300 cursor-pointer ${
                 mode === 'signin'
-                  ? 'bg-red-600 text-white shadow-lg font-bold'
-                  : 'dark:text-slate-400 text-slate-500 hover:text-red-600 dark:hover:text-white'
+                  ? 'bg-gradient-to-r from-rose-500 to-violet-600 text-white shadow-lg font-bold'
+                  : 'dark:text-slate-400 text-slate-500 hover:text-rose-500 dark:hover:text-white'
               }`}
             >
               <LogIn className="w-4 h-4" />
@@ -225,10 +225,10 @@ export default function LoginPage() {
                 setErrorMsg(null)
                 setSuccessMsg(null)
               }}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold rounded-xl transition-all duration-300 ${
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold rounded-xl transition-all duration-300 cursor-pointer ${
                 mode === 'signup'
-                  ? 'bg-red-600 text-white shadow-lg font-bold'
-                  : 'dark:text-slate-400 text-slate-500 hover:text-red-600 dark:hover:text-white'
+                  ? 'bg-gradient-to-r from-rose-500 to-violet-600 text-white shadow-lg font-bold'
+                  : 'dark:text-slate-400 text-slate-500 hover:text-rose-500 dark:hover:text-white'
               }`}
             >
               <UserPlus className="w-4 h-4" />
@@ -244,7 +244,7 @@ export default function LoginPage() {
             </div>
           )}
           {successMsg && (
-            <div className="flex items-start gap-3 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-2xl text-sm animate-fadeIn">
+            <div className="flex items-start gap-3 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-450 rounded-2xl text-sm animate-fadeIn">
               <CheckCircle className="w-5 h-5 shrink-0" />
               <span>{successMsg}</span>
             </div>
@@ -258,7 +258,7 @@ export default function LoginPage() {
                   {d.fullNameLabel}
                 </label>
                 <div className="relative">
-                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-555 text-slate-455">
+                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500">
                     <User className="w-5 h-5" />
                   </span>
                   <input
@@ -267,7 +267,7 @@ export default function LoginPage() {
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder={d.fullNamePlaceholder}
-                    className="w-full dark:bg-slate-950/70 bg-white border dark:border-slate-800 border-slate-200 dark:text-white text-slate-900 rounded-2xl py-3 pl-11 pr-4 placeholder-slate-400 dark:placeholder-slate-655 focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 transition-all text-sm"
+                    className="w-full dark:bg-slate-950/70 bg-white border dark:border-slate-800 border-slate-200 dark:text-white text-slate-900 rounded-2xl py-3 pl-11 pr-4 placeholder-slate-400 dark:placeholder-slate-655 focus:outline-none focus:ring-1 focus:ring-rose-500 focus:border-rose-500 transition-all text-sm"
                   />
                 </div>
               </div>
@@ -278,7 +278,7 @@ export default function LoginPage() {
                 {d.emailLabel}
               </label>
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-555 text-slate-455">
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500">
                   <Mail className="w-5 h-5" />
                 </span>
                 <input
@@ -287,7 +287,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder={d.emailPlaceholder}
-                  className="w-full dark:bg-slate-950/70 bg-white border dark:border-slate-800 border-slate-200 dark:text-white text-slate-900 rounded-2xl py-3 pl-11 pr-4 placeholder-slate-400 dark:placeholder-slate-655 focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 transition-all text-sm"
+                  className="w-full dark:bg-slate-950/70 bg-white border dark:border-slate-800 border-slate-200 dark:text-white text-slate-900 rounded-2xl py-3 pl-11 pr-4 placeholder-slate-400 dark:placeholder-slate-655 focus:outline-none focus:ring-1 focus:ring-rose-500 focus:border-rose-500 transition-all text-sm"
                 />
               </div>
             </div>
@@ -297,7 +297,7 @@ export default function LoginPage() {
                 {d.passwordLabel}
               </label>
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-555 text-slate-455">
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500">
                   <Lock className="w-5 h-5" />
                 </span>
                 <input
@@ -306,7 +306,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder={d.passwordPlaceholder}
-                  className="w-full dark:bg-slate-950/70 bg-white border dark:border-slate-800 border-slate-200 dark:text-white text-slate-900 rounded-2xl py-3 pl-11 pr-4 placeholder-slate-400 dark:placeholder-slate-655 focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 transition-all text-sm"
+                  className="w-full dark:bg-slate-950/70 bg-white border dark:border-slate-800 border-slate-200 dark:text-white text-slate-900 rounded-2xl py-3 pl-11 pr-4 placeholder-slate-400 dark:placeholder-slate-655 focus:outline-none focus:ring-1 focus:ring-rose-500 focus:border-rose-500 transition-all text-sm"
                 />
               </div>
             </div>
@@ -315,7 +315,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 py-3.5 bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-700 hover:to-rose-800 text-white font-bold rounded-2xl shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm mt-3"
+              className="w-full flex items-center justify-center gap-2 py-3.5 bg-gradient-to-r from-rose-500 to-violet-600 hover:brightness-110 text-white font-bold rounded-2xl shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm mt-3 cursor-pointer"
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />

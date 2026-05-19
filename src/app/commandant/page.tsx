@@ -92,46 +92,46 @@ export default function CommandantDashboard() {
   return (
     <div className="min-h-screen transition-colors duration-300 dark:bg-slate-950 bg-slate-50 dark:text-white text-slate-900 font-sans flex flex-col lg:flex-row overflow-x-hidden">
       {/* Background Gradients */}
-      <div className="absolute top-0 left-0 w-[300px] h-[300px] rounded-full dark:bg-slate-900 bg-red-100/30 blur-[150px] opacity-60 pointer-events-none" />
-      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full dark:bg-red-950/10 bg-rose-100/30 blur-[150px] opacity-40 pointer-events-none" />
+      <div className="absolute top-0 left-0 w-[300px] h-[300px] rounded-full dark:bg-slate-900 bg-rose-100/30 blur-[150px] opacity-60 pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full dark:bg-violet-955/10 bg-violet-100/30 blur-[150px] opacity-40 pointer-events-none" />
 
       {/* MOBILE HEADER */}
       <header className="lg:hidden w-full flex items-center justify-between px-6 py-4 dark:bg-slate-900/80 bg-white border-b dark:border-slate-900 border-slate-200 backdrop-blur-lg sticky top-0 z-30 shadow-sm transition-colors">
         <div className="flex items-center gap-2.5">
           <div className="p-2 rounded-xl bg-gradient-to-br dark:from-slate-900 dark:to-slate-800 from-slate-100 to-slate-50 border dark:border-slate-800 border-slate-200">
-            <Shield className="w-5 h-5 text-red-600" />
+            <Shield className="w-5 h-5 text-rose-500" />
           </div>
           <span className="text-sm font-extrabold tracking-tight">
-            {d.oshsu} <span className="text-red-600">{d.dormitorySystem}</span>
+            {d.oshsu} <span className="bg-gradient-to-r from-rose-500 to-violet-605 bg-clip-text text-transparent">{d.dormitorySystem}</span>
           </span>
         </div>
 
         <div className="flex items-center gap-2">
           {/* Theme switcher */}
-          <button onClick={toggleTheme} className="p-2 rounded-lg dark:bg-slate-950 bg-slate-100 border dark:border-slate-850 border-slate-200 text-xs">
+          <button onClick={toggleTheme} className="p-2 rounded-lg dark:bg-slate-950 bg-slate-100 border dark:border-slate-850 border-slate-200 text-xs cursor-pointer animate-pulse">
             {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-500" /> : <Moon className="w-4 h-4 text-slate-700" />}
           </button>
 
           {/* Language selector */}
           <button
             onClick={() => setLangMenuOpen(!langMenuOpen)}
-            className="flex items-center gap-1 px-2.5 py-2 rounded-lg dark:bg-slate-950 bg-slate-100 border dark:border-slate-850 border-slate-200 text-xs font-bold"
+            className="flex items-center gap-1 px-2.5 py-2 rounded-lg dark:bg-slate-950 bg-slate-100 border dark:border-slate-850 border-slate-200 text-xs font-bold cursor-pointer"
           >
-            <Globe className="w-3.5 h-3.5 text-red-600" />
+            <Globe className="w-3.5 h-3.5 text-rose-500" />
             <span className="uppercase">{language}</span>
           </button>
 
           {langMenuOpen && (
             <div className="absolute right-16 mt-32 w-28 rounded-xl dark:bg-slate-900 bg-white border dark:border-slate-800 border-slate-200 shadow-xl overflow-hidden z-50">
-              <button onClick={() => { setLanguage('kg'); setLangMenuOpen(false); }} className="w-full px-3 py-2.5 text-left text-2xs font-bold hover:bg-red-500/10">KG</button>
-              <button onClick={() => { setLanguage('ru'); setLangMenuOpen(false); }} className="w-full px-3 py-2.5 text-left text-2xs font-bold hover:bg-red-500/10">RU</button>
-              <button onClick={() => { setLanguage('en'); setLangMenuOpen(false); }} className="w-full px-3 py-2.5 text-left text-2xs font-bold hover:bg-red-500/10">EN</button>
+              <button onClick={() => { setLanguage('kg'); setLangMenuOpen(false); }} className="w-full px-3 py-2.5 text-left text-2xs font-bold hover:bg-rose-500/10 cursor-pointer">KG</button>
+              <button onClick={() => { setLanguage('ru'); setLangMenuOpen(false); }} className="w-full px-3 py-2.5 text-left text-2xs font-bold hover:bg-rose-500/10 cursor-pointer">RU</button>
+              <button onClick={() => { setLanguage('en'); setLangMenuOpen(false); }} className="w-full px-3 py-2.5 text-left text-2xs font-bold hover:bg-rose-500/10 cursor-pointer">EN</button>
             </div>
           )}
 
           <button 
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2.5 rounded-xl dark:bg-slate-950 bg-slate-100 border dark:border-slate-850 border-slate-200 text-red-600"
+            className="p-2.5 rounded-xl dark:bg-slate-955 bg-slate-100 border dark:border-slate-855 border-slate-200 text-rose-500 cursor-pointer"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -144,7 +144,7 @@ export default function CommandantDashboard() {
           <aside className="w-72 max-w-[80vw] h-full dark:bg-slate-900 bg-white p-6 border-r dark:border-slate-850 border-slate-200 flex flex-col justify-between" onClick={(e) => e.stopPropagation()}>
             <div className="space-y-6">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-slate-850 dark:bg-slate-800 flex items-center justify-center border border-slate-255 dark:border-slate-700 font-bold text-red-600 shadow-md">
+                <div className="w-10 h-10 rounded-xl bg-slate-855 dark:bg-slate-800 flex items-center justify-center border border-slate-255 dark:border-slate-700 font-bold text-rose-500 shadow-md">
                   {commandantName[0].toUpperCase()}
                 </div>
                 <div>
@@ -157,21 +157,21 @@ export default function CommandantDashboard() {
               <nav className="space-y-2">
                 <button
                   onClick={() => { setActiveTab('rooms'); setMobileMenuOpen(false); }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl transition-all ${activeTab === 'rooms' ? 'bg-red-600 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-850'}`}
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl transition-all cursor-pointer ${activeTab === 'rooms' ? 'bg-gradient-to-r from-rose-500 to-violet-600 text-white shadow-lg' : 'text-slate-555 hover:bg-slate-100 dark:hover:bg-slate-850'}`}
                 >
                   <Landmark className="w-4 h-4" />
                   {d.roomsMapTitle}
                 </button>
                 <button
                   onClick={() => { setActiveTab('tickets'); setMobileMenuOpen(false); }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl transition-all ${activeTab === 'tickets' ? 'bg-red-600 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-850'}`}
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl transition-all cursor-pointer ${activeTab === 'tickets' ? 'bg-gradient-to-r from-rose-500 to-violet-600 text-white shadow-lg' : 'text-slate-555 hover:bg-slate-100 dark:hover:bg-slate-850'}`}
                 >
                   <Wrench className="w-4 h-4" />
                   {d.studentTicketsTitle}
                 </button>
                 <button
                   onClick={() => { setActiveTab('students'); setMobileMenuOpen(false); }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl transition-all ${activeTab === 'students' ? 'bg-red-600 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-850'}`}
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl transition-all cursor-pointer ${activeTab === 'students' ? 'bg-gradient-to-r from-rose-500 to-violet-600 text-white shadow-lg' : 'text-slate-555 hover:bg-slate-100 dark:hover:bg-slate-850'}`}
                 >
                   <Users className="w-4 h-4" />
                   {d.studentsCardtitle}
@@ -181,7 +181,7 @@ export default function CommandantDashboard() {
 
             <button
               onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-2 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-650 dark:text-red-400 text-xs font-bold rounded-xl border border-red-500/10 transition-all"
+              className="w-full flex items-center justify-center gap-2 py-3 bg-rose-500/10 hover:bg-rose-500/20 text-rose-650 dark:text-rose-400 text-xs font-bold rounded-xl border border-rose-500/10 transition-all cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
               {d.logout}
@@ -196,11 +196,11 @@ export default function CommandantDashboard() {
           {/* Logo */}
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-xl bg-gradient-to-br dark:from-slate-900 dark:to-slate-800 from-slate-100 to-slate-50 border dark:border-slate-800 border-slate-200 shadow-lg">
-              <Landmark className="w-6 h-6 text-red-600" />
+              <Landmark className="w-6 h-6 text-rose-500" />
             </div>
             <div>
               <h1 className="text-lg font-black tracking-tight leading-none">{d.oshsu}</h1>
-              <span className="text-xs text-red-650 dark:text-red-500 font-bold tracking-widest uppercase">{d.commandant}</span>
+              <span className="text-xs bg-gradient-to-r from-rose-500 to-violet-600 bg-clip-text text-transparent font-bold tracking-widest uppercase">{d.commandant}</span>
             </div>
           </div>
 
@@ -208,10 +208,10 @@ export default function CommandantDashboard() {
           <nav className="space-y-2">
             <button
               onClick={() => setActiveTab('rooms')}
-              className={`w-full flex items-center justify-between px-4 py-3.5 text-sm font-semibold rounded-2xl transition-all duration-300 ${
+              className={`w-full flex items-center justify-between px-4 py-3.5 text-sm font-semibold rounded-2xl transition-all duration-300 cursor-pointer ${
                 activeTab === 'rooms'
-                  ? 'bg-red-600 text-white font-bold shadow-lg shadow-red-550/10'
-                  : 'dark:text-slate-400 text-slate-555 hover:text-red-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/50'
+                  ? 'bg-gradient-to-r from-rose-500 to-violet-600 text-white font-bold shadow-lg shadow-rose-550/10'
+                  : 'dark:text-slate-400 text-slate-555 hover:text-rose-500 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/50'
               }`}
             >
               <div className="flex items-center gap-3">
@@ -223,10 +223,10 @@ export default function CommandantDashboard() {
 
             <button
               onClick={() => setActiveTab('tickets')}
-              className={`w-full flex items-center justify-between px-4 py-3.5 text-sm font-semibold rounded-2xl transition-all duration-300 ${
+              className={`w-full flex items-center justify-between px-4 py-3.5 text-sm font-semibold rounded-2xl transition-all duration-300 cursor-pointer ${
                 activeTab === 'tickets'
-                  ? 'bg-red-600 text-white font-bold shadow-lg shadow-red-550/10'
-                  : 'dark:text-slate-400 text-slate-555 hover:text-red-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/50'
+                  ? 'bg-gradient-to-r from-rose-500 to-violet-600 text-white font-bold shadow-lg shadow-rose-550/10'
+                  : 'dark:text-slate-400 text-slate-555 hover:text-rose-500 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/50'
               }`}
             >
               <div className="flex items-center gap-3">
@@ -234,7 +234,7 @@ export default function CommandantDashboard() {
                 {language === 'kg' ? 'Мүчүлүштүктөр' : language === 'ru' ? 'Неполадки' : 'Maintenance'}
               </div>
               {stats.activeTickets > 0 && (
-                <span className={`px-2 py-0.5 text-xs font-black rounded-full ${activeTab === 'tickets' ? 'bg-slate-950 text-white' : 'bg-red-600 text-white'}`}>
+                <span className={`px-2 py-0.5 text-xs font-black rounded-full ${activeTab === 'tickets' ? 'bg-slate-950 text-white' : 'bg-rose-500 text-white'}`}>
                   {stats.activeTickets}
                 </span>
               )}
@@ -242,10 +242,10 @@ export default function CommandantDashboard() {
 
             <button
               onClick={() => setActiveTab('students')}
-              className={`w-full flex items-center justify-between px-4 py-3.5 text-sm font-semibold rounded-2xl transition-all duration-300 ${
+              className={`w-full flex items-center justify-between px-4 py-3.5 text-sm font-semibold rounded-2xl transition-all duration-300 cursor-pointer ${
                 activeTab === 'students'
-                  ? 'bg-red-600 text-white font-bold shadow-lg shadow-red-550/10'
-                  : 'dark:text-slate-400 text-slate-555 hover:text-red-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/50'
+                  ? 'bg-gradient-to-r from-rose-500 to-violet-600 text-white font-bold shadow-lg shadow-rose-550/10'
+                  : 'dark:text-slate-400 text-slate-555 hover:text-rose-500 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/50'
               }`}
             >
               <div className="flex items-center gap-3">
@@ -260,10 +260,10 @@ export default function CommandantDashboard() {
         {/* Action controllers & User info */}
         <div className="space-y-3">
           {/* Controllers */}
-          <div className="flex items-center justify-between gap-2 p-2 dark:bg-slate-950 bg-slate-100 rounded-xl border dark:border-slate-900 border-slate-200">
+          <div className="flex items-center justify-between gap-2 p-2 dark:bg-slate-955 bg-slate-100 rounded-xl border dark:border-slate-900 border-slate-200">
             <button 
               onClick={toggleTheme} 
-              className="flex-1 p-2 rounded-lg hover:bg-red-500/10 text-slate-500 hover:text-red-600 transition-colors flex justify-center"
+              className="flex-1 p-2 rounded-lg hover:bg-rose-500/10 text-slate-500 hover:text-rose-500 transition-colors flex justify-center cursor-pointer"
               title="Темный / Светлый режим"
             >
               {theme === 'dark' ? <Sun className="w-4.5 h-4.5 text-amber-500" /> : <Moon className="w-4.5 h-4.5" />}
@@ -272,7 +272,7 @@ export default function CommandantDashboard() {
             <select 
               value={language}
               onChange={(e) => setLanguage(e.target.value as any)}
-              className="bg-transparent text-xs font-bold text-slate-500 hover:text-red-600 focus:outline-none cursor-pointer uppercase py-1 px-2 rounded-md"
+              className="bg-transparent text-xs font-bold text-slate-500 hover:text-rose-500 focus:outline-none cursor-pointer uppercase py-1 px-2 rounded-md"
             >
               <option value="kg" className="dark:bg-slate-900 text-slate-900 dark:text-white">KG</option>
               <option value="ru" className="dark:bg-slate-900 text-slate-900 dark:text-white">RU</option>
@@ -282,7 +282,7 @@ export default function CommandantDashboard() {
 
           <div className="pt-4 border-t dark:border-slate-900 border-slate-200">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl dark:bg-slate-800 bg-slate-200 flex items-center justify-center border dark:border-slate-700 border-slate-300 font-bold text-red-600 shadow-md">
+              <div className="w-10 h-10 rounded-xl dark:bg-slate-800 bg-slate-200 flex items-center justify-center border dark:border-slate-700 border-slate-300 font-bold text-rose-500 shadow-md">
                 {commandantName[0].toUpperCase()}
               </div>
               <div className="truncate">
@@ -293,7 +293,7 @@ export default function CommandantDashboard() {
 
             <button
               onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-2 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-650 dark:text-red-400 text-sm font-bold rounded-2xl border border-red-500/10 transition-all duration-300"
+              className="w-full flex items-center justify-center gap-2 py-3 bg-rose-500/10 hover:bg-rose-500/20 text-rose-650 dark:text-rose-455 text-sm font-bold rounded-2xl border border-rose-500/10 transition-all duration-300 cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
               {d.logout}
@@ -303,7 +303,7 @@ export default function CommandantDashboard() {
       </aside>
 
       {/* MAIN CONTAINER */}
-      <main className="flex-1 flex flex-col min-h-screen overflow-y-auto p-6 md:p-8 lg:p-12 z-10">
+      <main className="flex-1 flex flex-col min-h-screen overflow-y-auto p-6 md:p-8 lg:p-12 z-10 animate-fadeIn">
         {/* Header */}
         <header className="mb-10">
           <h2 className="text-3xl font-extrabold tracking-tight">{d.commCabinet}</h2>
@@ -313,7 +313,7 @@ export default function CommandantDashboard() {
         {/* Metrics Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
           <div className="p-6 rounded-3xl dark:bg-slate-900/40 bg-white border dark:border-slate-900 border-slate-200 flex items-center gap-5 shadow-sm">
-            <div className="p-4 rounded-2xl bg-red-550/10 text-red-600 border border-red-500/10">
+            <div className="p-4 rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/10">
               <Users className="w-6 h-6" />
             </div>
             <div>
@@ -323,7 +323,7 @@ export default function CommandantDashboard() {
           </div>
 
           <div className="p-6 rounded-3xl dark:bg-slate-900/40 bg-white border dark:border-slate-900 border-slate-200 flex items-center gap-5 shadow-sm">
-            <div className="p-4 rounded-2xl bg-red-550/10 text-red-600 border border-red-500/10">
+            <div className="p-4 rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/10">
               <Landmark className="w-6 h-6" />
             </div>
             <div>
@@ -333,7 +333,7 @@ export default function CommandantDashboard() {
           </div>
 
           <div className="p-6 rounded-3xl dark:bg-slate-900/40 bg-white border dark:border-slate-900 border-slate-200 flex items-center gap-5 shadow-sm">
-            <div className="p-4 rounded-2xl bg-red-550/10 text-red-600 border border-red-500/10">
+            <div className="p-4 rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/10">
               <Wrench className="w-6 h-6" />
             </div>
             <div>
@@ -343,7 +343,7 @@ export default function CommandantDashboard() {
           </div>
 
           <div className="p-6 rounded-3xl dark:bg-slate-900/40 bg-white border dark:border-slate-900 border-slate-200 flex items-center gap-5 shadow-sm">
-            <div className="p-4 rounded-2xl bg-red-550/10 text-red-600 border border-red-500/10">
+            <div className="p-4 rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/10">
               <Sparkles className="w-6 h-6" />
             </div>
             <div>
@@ -366,14 +366,14 @@ export default function CommandantDashboard() {
                 <div 
                   key={room.id}
                   onClick={() => toggleRoomCleanliness(room.id)}
-                  className="group p-6 rounded-3xl dark:bg-slate-900/30 bg-white border dark:border-slate-900 border-slate-200 hover:border-red-500/30 transition-all duration-300 cursor-pointer flex flex-col justify-between space-y-6 hover:shadow-md"
+                  className="group p-6 rounded-3xl dark:bg-slate-900/30 bg-white border dark:border-slate-900 border-slate-200 hover:border-rose-500/30 transition-all duration-300 cursor-pointer flex flex-col justify-between space-y-6 hover:shadow-md"
                 >
                   <div className="flex items-center justify-between">
                     <div className="text-lg font-black">{room.id}-бөлмө</div>
                     <span className={`px-2.5 py-1 text-2xs font-extrabold rounded-full ${
                       room.status === 'clean' 
                         ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-450' 
-                        : 'bg-red-500/10 border border-red-500/20 text-red-600'
+                        : 'bg-rose-500/10 border border-rose-500/20 text-rose-500'
                     }`}>
                       {room.status === 'clean' ? d.roomClean : d.roomDirty}
                     </span>
@@ -393,7 +393,7 @@ export default function CommandantDashboard() {
 
                   <div className="h-1.5 w-full dark:bg-slate-950 bg-slate-100 rounded-full overflow-hidden border dark:border-slate-900 border-slate-200">
                     <div 
-                      className="h-full bg-gradient-to-r from-red-600 to-rose-700 rounded-full" 
+                      className="h-full bg-gradient-to-r from-rose-500 to-violet-600 rounded-full" 
                       style={{ width: `${(room.occupied / room.beds) * 100}%` }}
                     />
                   </div>
@@ -432,7 +432,7 @@ export default function CommandantDashboard() {
                         <td className="py-4 px-6">
                           <span className={`px-2 py-0.5 text-2xs font-extrabold rounded-full ${
                             ticket.urgency === 'high' 
-                              ? 'bg-red-500/10 border border-red-500/20 text-red-650 dark:text-red-400' 
+                              ? 'bg-rose-500/10 border border-rose-500/20 text-rose-500 dark:text-rose-455' 
                               : ticket.urgency === 'medium'
                               ? 'bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-500'
                               : 'dark:bg-slate-800 bg-slate-200 border dark:border-slate-700 border-slate-350 text-slate-500'
@@ -443,7 +443,7 @@ export default function CommandantDashboard() {
                         <td className="py-4 px-6 text-slate-500">{ticket.date}</td>
                         <td className="py-4 px-6">
                           {ticket.status === 'new' ? (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-bold rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-650 dark:text-amber-500">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-bold rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-655 dark:text-amber-500">
                               {d.appStatusPending}
                             </span>
                           ) : (
@@ -456,7 +456,7 @@ export default function CommandantDashboard() {
                           {ticket.status === 'new' ? (
                             <button 
                               onClick={() => resolveTicket(ticket.id)}
-                              className="px-3.5 py-1.5 bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-700 hover:to-rose-800 text-white text-xs font-extrabold rounded-xl shadow-lg transition-colors flex items-center gap-1.5 ml-auto"
+                              className="px-3.5 py-1.5 bg-gradient-to-r from-rose-500 to-violet-605 hover:brightness-110 text-white text-xs font-extrabold rounded-xl shadow-lg transition-all flex items-center gap-1.5 ml-auto cursor-pointer"
                             >
                               <Check className="w-3.5 h-3.5" />
                               {d.btnMarkResolved}
@@ -477,13 +477,13 @@ export default function CommandantDashboard() {
         {/* Tab 3: Students list */}
         {activeTab === 'students' && (
           <div className="p-8 md:p-12 rounded-3xl dark:bg-slate-900/20 bg-white border dark:border-slate-900 border-slate-200 text-center space-y-4 shadow-sm animate-fadeIn">
-            <Users className="w-12 h-12 text-red-600 mx-auto opacity-70" />
+            <Users className="w-12 h-12 text-rose-500 mx-auto opacity-70" />
             <h3 className="text-xl font-bold">{d.studentsCardtitle}</h3>
             <p className="text-sm text-slate-450 max-w-md mx-auto leading-relaxed">
               {d.studentsCardDesc}
             </p>
-            <button className="px-5 py-2.5 dark:bg-slate-950 bg-slate-100 hover:bg-slate-200 dark:hover:bg-slate-900 border dark:border-slate-800 border-slate-250 text-xs font-bold rounded-xl transition-all flex items-center gap-2 mx-auto">
-              <Phone className="w-4 h-4 text-red-600" />
+            <button className="px-5 py-2.5 dark:bg-slate-950 bg-slate-100 hover:bg-slate-200 dark:hover:bg-slate-900 border dark:border-slate-800 border-slate-250 text-xs font-bold rounded-xl transition-all flex items-center gap-2 mx-auto cursor-pointer">
+              <Phone className="w-4 h-4 text-rose-500" />
               {d.btnDownloadContacts}
             </button>
           </div>

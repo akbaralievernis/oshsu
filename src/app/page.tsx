@@ -72,10 +72,10 @@ export default function Home() {
   ]
 
   return (
-    <div className="relative min-h-screen transition-colors duration-300 dark:bg-slate-950 bg-slate-50 dark:text-white text-slate-900 font-sans overflow-x-hidden selection:bg-red-500 selection:text-white">
+    <div className="relative min-h-screen transition-colors duration-300 dark:bg-slate-950 bg-slate-50 dark:text-white text-slate-900 font-sans overflow-x-hidden selection:bg-rose-500 selection:text-white">
       {/* Background Decorative Gradients */}
-      <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[50%] rounded-full dark:bg-slate-900 bg-red-100/50 blur-[180px] opacity-75 pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[50%] rounded-full dark:bg-red-950/20 bg-rose-100/50 blur-[180px] opacity-60 pointer-events-none" />
+      <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[50%] rounded-full dark:bg-slate-900/40 bg-rose-100/50 blur-[180px] opacity-75 pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[50%] rounded-full dark:bg-violet-950/20 bg-violet-100/40 blur-[180px] opacity-60 pointer-events-none" />
 
       {/* Sticky Header */}
       <header className="sticky top-0 z-50 transition-colors duration-300 dark:bg-slate-950/70 bg-white/70 backdrop-blur-xl border-b dark:border-slate-900/80 border-slate-200 px-6 py-4">
@@ -83,10 +83,10 @@ export default function Home() {
           {/* Logo */}
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-xl bg-gradient-to-br dark:from-slate-900 dark:to-slate-800 from-slate-100 to-slate-50 border dark:border-slate-800 border-slate-200 shadow-md">
-              <Shield className="w-6 h-6 text-red-600" />
+              <Shield className="w-6 h-6 text-rose-500" />
             </div>
             <span className="text-xl font-black tracking-tight dark:bg-gradient-to-r dark:from-white dark:to-slate-200 bg-gradient-to-r from-slate-950 to-slate-855 bg-clip-text text-transparent">
-              {d.oshsu} <span className="text-red-600">{d.dormitorySystem}</span>
+              {d.oshsu} <span className="bg-gradient-to-r from-rose-500 to-violet-600 bg-clip-text text-transparent">{d.dormitorySystem}</span>
             </span>
           </div>
 
@@ -95,19 +95,19 @@ export default function Home() {
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="p-2.5 rounded-xl dark:bg-slate-900 bg-white border dark:border-slate-800 border-slate-200 hover:border-red-500/30 transition-all shadow-sm"
+              className="p-2.5 rounded-xl dark:bg-slate-900 bg-white border dark:border-slate-800 border-slate-200 hover:border-rose-500/30 transition-all shadow-sm cursor-pointer"
               title="Темный / Светлый режим"
             >
-              {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-500" /> : <Moon className="w-4 h-4 text-slate-700" />}
+              {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-500 animate-pulse" /> : <Moon className="w-4 h-4 text-slate-700" />}
             </button>
 
             {/* Language Switcher Dropdown */}
             <div className="relative">
               <button
                 onClick={() => setLangMenuOpen(!langMenuOpen)}
-                className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl dark:bg-slate-900 bg-white border dark:border-slate-800 border-slate-200 hover:border-red-500/30 transition-all text-xs font-bold shadow-sm"
+                className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl dark:bg-slate-900 bg-white border dark:border-slate-800 border-slate-200 hover:border-rose-500/30 transition-all text-xs font-bold shadow-sm cursor-pointer"
               >
-                <Globe className="w-4 h-4 text-red-600" />
+                <Globe className="w-4 h-4 text-rose-500" />
                 <span className="uppercase">{language}</span>
               </button>
 
@@ -115,19 +115,19 @@ export default function Home() {
                 <div className="absolute right-0 mt-2 w-32 rounded-2xl dark:bg-slate-900 bg-white border dark:border-slate-800 border-slate-200 shadow-xl overflow-hidden animate-fadeIn z-50">
                   <button
                     onClick={() => { setLanguage('kg'); setLangMenuOpen(false); }}
-                    className={`w-full px-4 py-3 text-left text-xs font-bold hover:bg-red-500/10 transition-colors ${language === 'kg' ? 'text-red-600' : ''}`}
+                    className={`w-full px-4 py-3 text-left text-xs font-bold hover:bg-rose-500/10 transition-colors cursor-pointer ${language === 'kg' ? 'text-rose-500' : ''}`}
                   >
                     Кыргызча (KG)
                   </button>
                   <button
                     onClick={() => { setLanguage('ru'); setLangMenuOpen(false); }}
-                    className={`w-full px-4 py-3 text-left text-xs font-bold hover:bg-red-500/10 transition-colors ${language === 'ru' ? 'text-red-600' : ''}`}
+                    className={`w-full px-4 py-3 text-left text-xs font-bold hover:bg-rose-500/10 transition-colors cursor-pointer ${language === 'ru' ? 'text-rose-500' : ''}`}
                   >
                     Русский (RU)
                   </button>
                   <button
                     onClick={() => { setLanguage('en'); setLangMenuOpen(false); }}
-                    className={`w-full px-4 py-3 text-left text-xs font-bold hover:bg-red-500/10 transition-colors ${language === 'en' ? 'text-red-600' : ''}`}
+                    className={`w-full px-4 py-3 text-left text-xs font-bold hover:bg-rose-500/10 transition-colors cursor-pointer ${language === 'en' ? 'text-rose-500' : ''}`}
                   >
                     English (EN)
                   </button>
@@ -137,7 +137,7 @@ export default function Home() {
 
             <Link
               href="/login"
-              className="flex items-center gap-2 px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-xl transition-all duration-300 shadow-lg shadow-red-655/10"
+              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-rose-500 to-violet-600 hover:brightness-110 text-white text-sm font-bold rounded-xl transition-all duration-300 shadow-lg shadow-rose-550/10"
             >
               {d.login}
               <ArrowRight className="w-4 h-4" />
@@ -147,44 +147,44 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative px-6 pt-20 pb-24 md:pt-28 md:pb-32 max-w-7xl mx-auto text-center z-10">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-red-550/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs font-bold uppercase tracking-wider mb-6 animate-pulse">
+      <section className="relative px-6 pt-20 pb-24 md:pt-28 md:pb-32 max-w-7xl mx-auto text-center z-10 animate-fadeIn">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-500 dark:text-rose-400 text-xs font-bold uppercase tracking-wider mb-6">
           <CheckCircle2 className="w-4 h-4" />
           {d.newDigitalPlatform}
         </div>
 
         <h1 className="text-4xl md:text-6xl font-black tracking-tight leading-[1.15] max-w-4xl mx-auto">
           {d.landingTitle} <br />
-          <span className="bg-gradient-to-r from-red-500 via-rose-600 to-red-700 bg-clip-text text-transparent drop-shadow-sm">
+          <span className="bg-gradient-to-r from-rose-500 via-pink-500 to-violet-600 bg-clip-text text-transparent drop-shadow-sm">
             {d.landingTitleSub}
           </span>
         </h1>
 
-        <p className="mt-6 text-base md:text-lg dark:text-slate-400 text-slate-600 max-w-2xl mx-auto leading-relaxed">
+        <p className="mt-6 text-base md:text-lg dark:text-slate-400 text-slate-655 max-w-2xl mx-auto leading-relaxed">
           {d.landingHeroDesc}
         </p>
 
         <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link
             href="/login"
-            className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-750 hover:to-rose-800 text-white font-bold rounded-2xl shadow-xl shadow-red-500/10 transition-all duration-300 transform hover:scale-[1.02]"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-rose-500 to-violet-650 hover:brightness-110 text-white font-bold rounded-2xl shadow-xl shadow-rose-500/10 transition-all duration-300 transform hover:scale-[1.02]"
           >
             {d.registerNowBtn}
             <ArrowRight className="w-5 h-5" />
           </Link>
           <a
             href="#dormitories"
-            className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 dark:bg-slate-900/80 bg-white hover:bg-slate-100 border dark:border-slate-800 border-slate-200 hover:border-slate-300 text-sm font-semibold rounded-2xl transition-all duration-300 shadow-sm"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 dark:bg-slate-900/80 bg-white hover:bg-slate-100 border dark:border-slate-800 border-slate-200 hover:border-slate-350 text-sm font-semibold rounded-2xl transition-all duration-300 shadow-sm"
           >
             {d.dormCatalogBtn}
           </a>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-5xl mx-auto mt-20 p-8 rounded-3xl dark:bg-slate-900/40 bg-white/70 backdrop-blur-md border dark:border-slate-900 border-slate-200 shadow-xl">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-5xl mx-auto mt-20 p-8 rounded-3xl dark:bg-slate-900/40 bg-white border dark:border-slate-900 border-slate-200 shadow-xl">
           {stats.map((stat, idx) => (
             <div key={idx} className="text-center space-y-1">
-              <div className="text-3xl md:text-4xl font-extrabold text-red-600">{stat.value}</div>
+              <div className="text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-rose-500 to-violet-600 bg-clip-text text-transparent">{stat.value}</div>
               <div className="text-xs md:text-sm dark:text-slate-400 text-slate-500 font-semibold uppercase tracking-wider">{stat.label}</div>
             </div>
           ))}
@@ -205,9 +205,9 @@ export default function Home() {
             {featuresList.map((feature, idx) => (
               <div
                 key={idx}
-                className="group p-6 rounded-2xl dark:bg-slate-900/30 bg-white border dark:border-slate-900 border-slate-200 hover:border-red-500/30 transition-all duration-300 hover:shadow-lg"
+                className="group p-6 rounded-2xl dark:bg-slate-900/30 bg-white border dark:border-slate-900 border-slate-200 hover:border-rose-500/30 transition-all duration-300 hover:shadow-lg"
               >
-                <div className="inline-flex p-3 rounded-xl dark:bg-slate-950 bg-slate-100 border dark:border-slate-800 border-slate-200 text-red-600 group-hover:border-red-500/20 transition-all duration-300 mb-4 shadow-inner">
+                <div className="inline-flex p-3 rounded-xl dark:bg-slate-950 bg-slate-100 border dark:border-slate-800 border-slate-200 text-rose-500 group-hover:border-rose-500/20 transition-all duration-300 mb-4 shadow-inner">
                   <feature.icon className="w-6 h-6" />
                 </div>
                 <h3 className="text-lg font-bold mb-2">{feature.title}</h3>
@@ -232,11 +232,11 @@ export default function Home() {
             {dormitories.map((dorm) => (
               <div
                 key={dorm.id}
-                className="flex flex-col justify-between p-8 rounded-3xl dark:bg-slate-900/30 bg-white border dark:border-slate-900 border-slate-200 hover:border-red-500/20 hover:shadow-xl transition-all duration-300"
+                className="flex flex-col justify-between p-8 rounded-3xl dark:bg-slate-900/30 bg-white border dark:border-slate-900 border-slate-200 hover:border-rose-500/20 hover:shadow-xl transition-all duration-300"
               >
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs font-bold uppercase tracking-wider">
+                    <span className="px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-500 dark:text-rose-455 text-xs font-bold uppercase tracking-wider">
                       {dorm.gender}
                     </span>
                     <span className="text-xs dark:text-slate-500 text-slate-400 font-semibold">{dorm.capacity}</span>
@@ -245,7 +245,7 @@ export default function Home() {
                   <h3 className="text-xl font-bold">{dorm.name}</h3>
 
                   <div className="flex items-center gap-1.5 text-xs dark:text-slate-400 text-slate-500">
-                    <MapPin className="w-4 h-4 text-red-600 shrink-0" />
+                    <MapPin className="w-4 h-4 text-rose-500 shrink-0" />
                     <span>{dorm.address}</span>
                   </div>
 
@@ -256,7 +256,7 @@ export default function Home() {
                     <ul className="grid grid-cols-2 gap-2 text-xs dark:text-slate-300 text-slate-655">
                       {dorm.features.map((feat, i) => (
                         <li key={i} className="flex items-center gap-1.5">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-red-600 shrink-0" />
+                          <CheckCircle2 className="w-3.5 h-3.5 text-rose-500 shrink-0" />
                           <span className="truncate">{feat}</span>
                         </li>
                       ))}
@@ -267,10 +267,10 @@ export default function Home() {
                 <div className="mt-8">
                   <Link
                     href="/login"
-                    className="w-full flex items-center justify-center gap-2 py-3 dark:bg-slate-950 bg-slate-100 hover:bg-slate-200 dark:hover:bg-slate-900 border dark:border-slate-800 border-slate-200 hover:border-red-500/30 text-xs font-bold rounded-xl transition-all duration-300"
+                    className="w-full flex items-center justify-center gap-2 py-3 dark:bg-slate-950 bg-slate-100 hover:bg-slate-200 dark:hover:bg-slate-900 border dark:border-slate-800 border-slate-200 hover:border-rose-500/30 text-xs font-bold rounded-xl transition-all duration-300 cursor-pointer"
                   >
                     {d.applyDorm}
-                    <ArrowRight className="w-3.5 h-3.5 text-red-600" />
+                    <ArrowRight className="w-3.5 h-3.5 text-rose-500" />
                   </Link>
                 </div>
               </div>
@@ -281,14 +281,14 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="relative px-6 py-12 z-10 border-t dark:border-slate-900 border-slate-200 bg-white dark:bg-slate-950 transition-colors">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-sm dark:text-slate-500 text-slate-400">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-sm dark:text-slate-500 text-slate-450">
           <div className="flex items-center gap-2">
-            <Shield className="w-5 h-5 text-red-600" />
+            <Shield className="w-5 h-5 text-rose-500" />
             <span className="font-bold dark:text-white text-slate-900">{d.oshsu} {d.dormitorySystem}</span>
           </div>
           <p>© {new Date().getFullYear()} {d.copyright}</p>
           <div className="flex items-center gap-6">
-            <a href="https://oshsu.kg" target="_blank" rel="noopener noreferrer" className="hover:text-red-600 transition-colors">ОшМУ расмий сайты</a>
+            <a href="https://oshsu.kg" target="_blank" rel="noopener noreferrer" className="hover:text-rose-500 transition-colors">ОшМУ расмий сайты</a>
           </div>
         </div>
       </footer>
