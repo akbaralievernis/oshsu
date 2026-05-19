@@ -19,7 +19,7 @@ export async function proxy(request: NextRequest) {
   }
 
   // If logged in, enforce role-based redirects
-  if (user) {
+  if (user && supabase) {
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
