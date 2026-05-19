@@ -271,13 +271,20 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className="mt-8">
+                <div className="grid grid-cols-2 gap-3 mt-8">
+                  <Link
+                    href={`/dormitory/${dorm.id}`}
+                    className="w-full flex items-center justify-center gap-1.5 py-3 dark:bg-slate-900 bg-white hover:bg-slate-100 dark:hover:bg-slate-800 border dark:border-slate-800 border-slate-200 text-xs font-bold rounded-xl transition-all duration-300 cursor-pointer"
+                  >
+                    {language === 'kg' ? 'Кененирээк' : language === 'ru' ? 'Подробнее' : 'Details'}
+                  </Link>
+
                   <Link
                     href="/login"
-                    className="w-full flex items-center justify-center gap-2 py-3 dark:bg-slate-950 bg-slate-100 hover:bg-slate-200 dark:hover:bg-slate-900 border dark:border-slate-800 border-slate-200 hover:border-rose-500/30 text-xs font-bold rounded-xl transition-all duration-300 cursor-pointer"
+                    className="w-full flex items-center justify-center gap-1.5 py-3 bg-gradient-to-r from-rose-500 to-violet-650 hover:brightness-110 text-white text-xs font-bold rounded-xl transition-all duration-300 cursor-pointer shadow-md shadow-rose-500/10"
                   >
                     {d.applyDorm}
-                    <ArrowRight className="w-3.5 h-3.5 text-rose-500" />
+                    <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>
               </div>
