@@ -7,8 +7,19 @@ import { useLanguageAndTheme } from '../LanguageAndThemeContext'
 import { dictionaries } from '@/utils/dictionaries'
 import { 
   Shield, Landmark, Users, ClipboardList, CheckCircle, AlertCircle, Wrench,
-  Check, LogOut, ChevronRight, Sparkles, Phone, UserPlus, Menu, X, Sun, Moon, Globe
+  Check, LogOut, ChevronRight, Sparkles, Phone, UserPlus, Menu, X, Sun, Moon, Globe,
+  ArrowUpRight, HelpCircle, Activity, ShieldCheck
 } from 'lucide-react'
+
+interface Room {
+  id: string
+  floor: number
+  beds: number
+  occupied: number
+  status: 'clean' | 'dirty'
+  type: string
+  residents: string[]
+}
 
 export default function CommandantDashboard() {
   const router = useRouter()
@@ -22,6 +33,14 @@ export default function CommandantDashboard() {
   // Mobile drawer states
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [langMenuOpen, setLangMenuOpen] = useState(false)
+
+  // Interactive 2D Schema states
+  const [selectedFloor, setSelectedFloor] = useState<number>(1)
+  const [selectedRoom, setSelectedRoom] = useState<Room | null>(null)
+  
+  // Assign Student Modal state
+  const [assigningBedIndex, setAssigningBedIndex] = useState<number | null>(null)
+  const [newStudentName, setNewStudentName] = useState('')
   
   // Mock data for the specific dormitory
   const [stats, setStats] = useState({
@@ -31,19 +50,24 @@ export default function CommandantDashboard() {
     cleanRooms: 142
   })
 
-  const [rooms, setRooms] = useState([
-    { id: '101', floor: 1, beds: 3, occupied: 3, status: 'clean', type: language === 'kg' ? 'кыздар' : language === 'ru' ? 'девочки' : 'girls' },
-    { id: '102', floor: 1, beds: 3, occupied: 2, status: 'dirty', type: language === 'kg' ? 'кыздар' : language === 'ru' ? 'девочки' : 'girls' },
-    { id: '103', floor: 1, beds: 4, occupied: 4, status: 'clean', type: language === 'kg' ? 'кыздар' : language === 'ru' ? 'девочки' : 'girls' },
-    { id: '201', floor: 2, beds: 3, occupied: 1, status: 'clean', type: language === 'kg' ? 'балдар' : language === 'ru' ? 'мальчики' : 'boys' },
-    { id: '202', floor: 2, beds: 3, occupied: 3, status: 'clean', type: language === 'kg' ? 'балдар' : language === 'ru' ? 'мальчики' : 'boys' },
-    { id: '203', floor: 2, beds: 4, occupied: 0, status: 'clean', type: language === 'kg' ? 'бош бөлмө' : language === 'ru' ? 'свободная' : 'empty' },
+  const [rooms, setRooms] = useState<Room[]>([
+    // Floor 1 Rooms
+    { id: '101', floor: 1, beds: 3, occupied: 3, status: 'clean', type: 'girls', residents: ['Сыдыкова Жазгүл', 'Токтосунова Алина', 'Абдыкадырова Назгүл'] },
+    { id: '102', floor: 1, beds: 3, occupied: 2, status: 'dirty', type: 'girls', residents: ['Маматова Асел', 'Карыбекова Бурул'] },
+    { id: '103', floor: 1, beds: 4, occupied: 4, status: 'clean', type: 'girls', residents: ['Арстанбекова Гүлзат', 'Нурматова Жамила', 'Ысакова Каныкей', 'Осмонова Самара'] },
+    { id: '104', floor: 1, beds: 3, occupied: 0, status: 'clean', type: 'girls', residents: [] },
+    
+    // Floor 2 Rooms
+    { id: '201', floor: 2, beds: 3, occupied: 1, status: 'clean', type: 'boys', residents: ['Маматов Бектур'] },
+    { id: '202', floor: 2, beds: 3, occupied: 3, status: 'clean', type: 'boys', residents: ['Касымов Улукбек', 'Абдуллаев Азамат', 'Алиев Тимур'] },
+    { id: '203', floor: 2, beds: 4, occupied: 0, status: 'clean', type: 'empty', residents: [] },
+    { id: '204', floor: 2, beds: 3, occupied: 2, status: 'dirty', type: 'boys', residents: ['Садыков Кутман', 'Ибраимов Адилет'] },
   ])
 
   const [tickets, setTickets] = useState([
-    { id: '1', room: '102', student: 'Алиев Тимур', title: language === 'kg' ? 'Душ бузулду' : 'Сломался душ', urgency: 'high', status: 'new', date: '19.05.2026' },
+    { id: '1', room: '102', student: 'Маматова Асел', title: language === 'kg' ? 'Душ бузулду' : 'Сломался душ', urgency: 'high', status: 'new', date: '19.05.2026' },
     { id: '2', room: '201', student: 'Маматов Бектур', title: language === 'kg' ? 'Розетка иштебейт' : 'Не работает розетка', urgency: 'medium', status: 'new', date: '19.05.2026' },
-    { id: '3', room: '103', student: 'Бакытова Нурай', title: language === 'kg' ? 'Терезе жабылбайт' : 'Окно не закрывается', urgency: 'low', status: 'resolved', date: '18.05.2026' },
+    { id: '3', room: '103', student: 'Арстанбекова Гүлзат', title: language === 'kg' ? 'Терезе жабылбайт' : 'Окно не закрывается', urgency: 'low', status: 'resolved', date: '18.05.2026' },
   ])
 
   // Check auth & role
@@ -77,20 +101,88 @@ export default function CommandantDashboard() {
     setRooms(prev => 
       prev.map(r => {
         if (r.id === id) {
-          const newStatus = r.status === 'clean' ? 'dirty' : 'clean'
+          const newStatus: 'clean' | 'dirty' = r.status === 'clean' ? 'dirty' : 'clean'
           setStats(s => ({
             ...s,
             cleanRooms: newStatus === 'clean' ? s.cleanRooms + 1 : Math.max(0, s.cleanRooms - 1)
           }))
-          return { ...r, status: newStatus }
+          const updated: Room = { ...r, status: newStatus }
+          if (selectedRoom?.id === id) setSelectedRoom(updated)
+          return updated
         }
         return r
       })
     )
   }
 
+  const assignStudentToBed = () => {
+    if (!selectedRoom || assigningBedIndex === null || !newStudentName.trim()) return
+
+    setRooms(prev =>
+      prev.map(r => {
+        if (r.id === selectedRoom.id) {
+          const newResidents = [...r.residents]
+          newResidents[assigningBedIndex] = newStudentName.trim()
+          const newOccupied = newResidents.filter(Boolean).length
+          
+          setStats(s => ({
+            ...s,
+            activeStudents: s.activeStudents + 1,
+            emptyBeds: Math.max(0, s.emptyBeds - 1)
+          }))
+
+          const updated = {
+            ...r,
+            occupied: newOccupied,
+            residents: newResidents,
+            type: r.type === 'empty' ? 'girls' : r.type
+          }
+          setSelectedRoom(updated)
+          return updated
+        }
+        return r
+      })
+    )
+
+    setNewStudentName('')
+    setAssigningBedIndex(null)
+  }
+
+  const evictStudentFromBed = (index: number) => {
+    if (!selectedRoom) return
+
+    setRooms(prev =>
+      prev.map(r => {
+        if (r.id === selectedRoom.id) {
+          const newResidents = [...r.residents]
+          newResidents.splice(index, 1)
+          const newOccupied = newResidents.length
+
+          setStats(s => ({
+            ...s,
+            activeStudents: Math.max(0, s.activeStudents - 1),
+            emptyBeds: s.emptyBeds + 1
+          }))
+
+          const updated = {
+            ...r,
+            occupied: newOccupied,
+            residents: newResidents,
+            type: newOccupied === 0 ? 'empty' : r.type
+          }
+          setSelectedRoom(updated)
+          return updated
+        }
+        return r
+      })
+    )
+  }
+
+  // Filtered rooms based on floor plan
+  const filteredRooms = rooms.filter(r => r.floor === selectedFloor)
+
   return (
-    <div className="min-h-screen transition-colors duration-300 dark:bg-slate-950 bg-slate-50 dark:text-white text-slate-900 font-sans flex flex-col lg:flex-row overflow-x-hidden">
+    <div className="min-h-screen transition-colors duration-300 dark:bg-slate-955 bg-slate-50 dark:text-white text-slate-900 font-sans flex flex-col lg:flex-row overflow-x-hidden">
       {/* Background Gradients */}
       <div className="absolute top-0 left-0 w-[300px] h-[300px] rounded-full dark:bg-slate-900 bg-rose-100/30 blur-[150px] opacity-60 pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full dark:bg-violet-955/10 bg-violet-100/30 blur-[150px] opacity-40 pointer-events-none" />
@@ -140,7 +232,7 @@ export default function CommandantDashboard() {
 
       {/* MOBILE SLIDE-IN MENU */}
       {mobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 bg-slate-950/60 backdrop-blur-md z-40 animate-fadeIn" onClick={() => setMobileMenuOpen(false)}>
+        <div className="lg:hidden fixed inset-0 bg-slate-955/60 backdrop-blur-md z-40 animate-fadeIn" onClick={() => setMobileMenuOpen(false)}>
           <aside className="w-72 max-w-[80vw] h-full dark:bg-slate-900 bg-white p-6 border-r dark:border-slate-850 border-slate-200 flex flex-col justify-between" onClick={(e) => e.stopPropagation()}>
             <div className="space-y-6">
               <div className="flex items-center gap-3">
@@ -216,7 +308,7 @@ export default function CommandantDashboard() {
             >
               <div className="flex items-center gap-3">
                 <Landmark className="w-5 h-5" />
-                {language === 'kg' ? 'Бөлмөлөрдүн картасы' : language === 'ru' ? 'Карта комнат' : 'Rooms Map'}
+                {language === 'kg' ? 'Бөлмөлөрдүн схемасы' : language === 'ru' ? 'Схема комнат (2D)' : 'Rooms Schema (2D)'}
               </div>
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -263,7 +355,7 @@ export default function CommandantDashboard() {
           <div className="flex items-center justify-between gap-2 p-2 dark:bg-slate-955 bg-slate-100 rounded-xl border dark:border-slate-900 border-slate-200">
             <button 
               onClick={toggleTheme} 
-              className="flex-1 p-2 rounded-lg hover:bg-rose-500/10 text-slate-500 hover:text-rose-500 transition-colors flex justify-center cursor-pointer"
+              className="flex-1 p-2 rounded-lg hover:bg-rose-500/10 text-slate-500 hover:text-rose-555 transition-colors flex justify-center cursor-pointer"
               title="Темный / Светлый режим"
             >
               {theme === 'dark' ? <Sun className="w-4.5 h-4.5 text-amber-500" /> : <Moon className="w-4.5 h-4.5" />}
@@ -353,53 +445,224 @@ export default function CommandantDashboard() {
           </div>
         </div>
 
-        {/* Tab 1: Rooms Map */}
+        {/* Tab 1: Rooms Interactive 2D Layout Map */}
         {activeTab === 'rooms' && (
-          <div className="space-y-6 animate-fadeIn">
-            <div className="flex justify-between items-center">
-              <h3 className="text-xl font-bold">{d.roomsMapTitle}</h3>
-              <span className="text-xs text-slate-500 font-medium">{d.roomsMapHint}</span>
+          <div className="space-y-8 animate-fadeIn">
+            {/* Interactive Title & Floor plan controller */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h3 className="text-xl font-bold">{language === 'kg' ? 'Интерактивдүү Карта (2D)' : 'Интерактивная Карта (2D)'}</h3>
+                <p className="text-xs text-slate-555 mt-1">{language === 'kg' ? 'Корпустун коридору жана бөлмөлөрдүн жайгашуу схемасы' : 'Интерактивная планировка коридоров и комнат общежития'}</p>
+              </div>
+
+              {/* Floor Switcher */}
+              <div className="flex p-1 dark:bg-slate-950 bg-slate-200/80 rounded-xl border dark:border-slate-900 border-slate-300">
+                <button
+                  onClick={() => { setSelectedFloor(1); setSelectedRoom(null); }}
+                  className={`px-4 py-2 text-xs font-black rounded-lg transition-all cursor-pointer ${selectedFloor === 1 ? 'bg-gradient-to-r from-rose-500 to-violet-600 text-white shadow-md' : 'text-slate-500 hover:text-rose-500'}`}
+                >
+                  1-кабат (1st Floor)
+                </button>
+                <button
+                  onClick={() => { setSelectedFloor(2); setSelectedRoom(null); }}
+                  className={`px-4 py-2 text-xs font-black rounded-lg transition-all cursor-pointer ${selectedFloor === 2 ? 'bg-gradient-to-r from-rose-500 to-violet-600 text-white shadow-md' : 'text-slate-500 hover:text-rose-500'}`}
+                >
+                  2-кабат (2nd Floor)
+                </button>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {rooms.map(room => (
+            {/* 2D ARCHITECTURAL LAYOUT PLAN */}
+            <div className="p-8 rounded-3xl dark:bg-slate-900/20 bg-white border dark:border-slate-900 border-slate-200 shadow-md space-y-6 overflow-x-auto min-w-[750px]">
+              {/* TOP ROW ROOMS (EVEN NUMBERS) */}
+              <div className="grid grid-cols-4 gap-6">
+                {filteredRooms.slice(0, 2).map((room) => {
+                  const isFull = room.occupied === room.beds
+                  const isEmpty = room.occupied === 0
+                  return (
+                    <div
+                      key={room.id}
+                      onClick={() => setSelectedRoom(room)}
+                      className={`relative p-5 rounded-2xl border text-center transition-all duration-300 cursor-pointer hover:-translate-y-1 ${
+                        room.status === 'dirty'
+                          ? 'border-rose-550/40 bg-rose-500/5 animate-pulse'
+                          : isFull
+                          ? 'border-violet-600 bg-gradient-to-br from-violet-955/20 to-slate-955/20'
+                          : isEmpty
+                          ? 'border-dashed border-emerald-500/40 bg-emerald-500/5'
+                          : 'border-slate-350 dark:border-slate-800 dark:bg-slate-950/40 bg-slate-50'
+                      }`}
+                    >
+                      <span className="absolute top-3 right-3 flex h-2 w-2">
+                        <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${room.status === 'dirty' ? 'bg-rose-500' : isFull ? 'bg-violet-500' : 'bg-emerald-500'}`} />
+                        <span className={`relative inline-flex rounded-full h-2 w-2 ${room.status === 'dirty' ? 'bg-rose-500' : isFull ? 'bg-violet-500' : 'bg-emerald-500'}`} />
+                      </span>
+
+                      <div className="text-sm font-extrabold">{room.id}-Бөлмө</div>
+                      <div className="text-2xs text-slate-500 uppercase tracking-widest mt-1 font-semibold">{room.type}</div>
+                      
+                      <div className="mt-4 flex items-center justify-center gap-1 text-xs">
+                        <Users className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                        <span className="font-extrabold">{room.occupied} / {room.beds}</span>
+                      </div>
+                    </div>
+                  )
+                })}
+                {/* Empty spacer block to mimic floor plan */}
+                <div className="col-span-2 border dark:border-slate-900 border-slate-200 border-dashed rounded-2xl flex items-center justify-center text-[10px] text-slate-500 font-bold uppercase tracking-wider bg-slate-500/5">
+                  <ShieldCheck className="w-4 h-4 text-rose-500 mr-2" />
+                  {language === 'kg' ? 'Окуу жана эс алуу залы' : 'Комната отдыха / Коворкинг'}
+                </div>
+              </div>
+
+              {/* CENTRAL HALLWAY (КОРИДОР) */}
+              <div className="w-full h-14 bg-gradient-to-r dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 from-slate-200 via-slate-100 to-slate-200 rounded-xl flex items-center justify-between px-8 border dark:border-slate-850 border-slate-300">
+                <span className="text-[10px] font-black text-slate-555 uppercase tracking-widest">{language === 'kg' ? '◀ БАШКЫ ЧЫГУУ / ВЫХОД' : '◀ ГЛАВНЫЙ ВЫХОД / EXIT'}</span>
+                <span className="text-xs font-black bg-gradient-to-r from-rose-500 to-violet-600 bg-clip-text text-transparent uppercase tracking-widest">{language === 'kg' ? 'КОРИДОР / ХОЛЛ' : 'ЦЕНТРАЛЬНЫЙ КОРИДОР'}</span>
+                <span className="text-[10px] font-black text-slate-555 uppercase tracking-widest">{language === 'kg' ? 'КҮЗӨТ / ОХРАНА ▶' : 'ПОСТ ДЕЖУРНОГО ▶'}</span>
+              </div>
+
+              {/* BOTTOM ROW ROOMS (ODD NUMBERS) */}
+              <div className="grid grid-cols-4 gap-6">
+                {filteredRooms.slice(2).map((room) => {
+                  const isFull = room.occupied === room.beds
+                  const isEmpty = room.occupied === 0
+                  return (
+                    <div
+                      key={room.id}
+                      onClick={() => setSelectedRoom(room)}
+                      className={`relative p-5 rounded-2xl border text-center transition-all duration-300 cursor-pointer hover:-translate-y-1 ${
+                        room.status === 'dirty'
+                          ? 'border-rose-550/40 bg-rose-500/5 animate-pulse'
+                          : isFull
+                          ? 'border-violet-605 bg-gradient-to-br from-violet-955/20 to-slate-955/20'
+                          : isEmpty
+                          ? 'border-dashed border-emerald-500/40 bg-emerald-500/5'
+                          : 'border-slate-350 dark:border-slate-800 dark:bg-slate-950/40 bg-slate-50'
+                      }`}
+                    >
+                      <span className="absolute top-3 right-3 flex h-2 w-2">
+                        <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${room.status === 'dirty' ? 'bg-rose-500' : isFull ? 'bg-violet-500' : 'bg-emerald-500'}`} />
+                        <span className={`relative inline-flex rounded-full h-2 w-2 ${room.status === 'dirty' ? 'bg-rose-500' : isFull ? 'bg-violet-500' : 'bg-emerald-500'}`} />
+                      </span>
+
+                      <div className="text-sm font-extrabold">{room.id}-Бөлмө</div>
+                      <div className="text-2xs text-slate-500 uppercase tracking-widest mt-1 font-semibold">{room.type}</div>
+                      
+                      <div className="mt-4 flex items-center justify-center gap-1 text-xs">
+                        <Users className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                        <span className="font-extrabold">{room.occupied} / {room.beds}</span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* SELECTED ROOM INTERACTIVE MODAL OVERLAY */}
+            {selectedRoom && (
+              <div className="fixed inset-0 bg-slate-955/70 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fadeIn" onClick={() => setSelectedRoom(null)}>
                 <div 
-                  key={room.id}
-                  onClick={() => toggleRoomCleanliness(room.id)}
-                  className="group p-6 rounded-3xl dark:bg-slate-900/30 bg-white border dark:border-slate-900 border-slate-200 hover:border-rose-500/30 transition-all duration-300 cursor-pointer flex flex-col justify-between space-y-6 hover:shadow-md"
+                  className="w-full max-w-lg dark:bg-slate-900 bg-white border dark:border-slate-800 border-slate-200 rounded-3xl p-8 shadow-2xl space-y-6"
+                  onClick={(e) => e.stopPropagation()}
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="text-lg font-black">{room.id}-бөлмө</div>
-                    <span className={`px-2.5 py-1 text-2xs font-extrabold rounded-full ${
-                      room.status === 'clean' 
-                        ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-450' 
-                        : 'bg-rose-500/10 border border-rose-500/20 text-rose-500'
-                    }`}>
-                      {room.status === 'clean' ? d.roomClean : d.roomDirty}
-                    </span>
+                  {/* Modal Header */}
+                  <div className="flex items-center justify-between border-b dark:border-slate-850 border-slate-200 pb-4">
+                    <div>
+                      <h4 className="text-2xl font-black">{selectedRoom.id}-Бөлмө маалыматы</h4>
+                      <p className="text-xs text-slate-500 mt-0.5">{selectedRoom.floor}-кабат, Башкы корпус</p>
+                    </div>
+                    <button 
+                      onClick={() => setSelectedRoom(null)}
+                      className="p-1.5 rounded-xl hover:bg-slate-500/10 transition-all cursor-pointer"
+                    >
+                      <X className="w-6 h-6 text-slate-400" />
+                    </button>
                   </div>
 
-                  <div className="space-y-3">
-                    <div className="flex justify-between text-xs font-semibold text-slate-500">
-                      <span>{d.roomTypeLabel}</span>
-                      <span className="dark:text-slate-200 text-slate-700 capitalize">{room.type}</span>
+                  {/* Room Config Status */}
+                  <div className="flex items-center justify-between p-4 rounded-2xl dark:bg-slate-955 bg-slate-100 border dark:border-slate-850 border-slate-200 text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className={`px-2.5 py-1 font-extrabold rounded-full ${selectedRoom.status === 'clean' ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-450' : 'bg-rose-500/10 border border-rose-500/20 text-rose-500'}`}>
+                        {selectedRoom.status === 'clean' ? d.roomClean : d.roomDirty}
+                      </span>
+                      <button 
+                        onClick={() => toggleRoomCleanliness(selectedRoom.id)}
+                        className="text-[10px] font-bold text-rose-500 hover:underline cursor-pointer"
+                      >
+                        {selectedRoom.status === 'clean' ? 'Кир деп белгилөө' : 'Тазаланды деп белгилөө'}
+                      </button>
                     </div>
-
-                    <div className="flex justify-between text-xs font-semibold text-slate-500">
-                      <span>{d.roomOccupiedLabel}</span>
-                      <span className="dark:text-slate-200 text-slate-700">{room.occupied} / {room.beds}</span>
-                    </div>
+                    <div className="font-bold text-slate-500 uppercase tracking-widest">{selectedRoom.type}</div>
                   </div>
 
-                  <div className="h-1.5 w-full dark:bg-slate-950 bg-slate-100 rounded-full overflow-hidden border dark:border-slate-900 border-slate-200">
-                    <div 
-                      className="h-full bg-gradient-to-r from-rose-500 to-violet-600 rounded-full" 
-                      style={{ width: `${(room.occupied / room.beds) * 100}%` }}
-                    />
+                  {/* Bed Allocation Slots */}
+                  <div className="space-y-4">
+                    <h5 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Койко-орундардын тизмеси:</h5>
+                    <div className="space-y-3">
+                      {Array.from({ length: selectedRoom.beds }).map((_, idx) => {
+                        const occupant = selectedRoom.residents[idx]
+                        return (
+                          <div 
+                            key={idx} 
+                            className="flex items-center justify-between p-4 rounded-xl dark:bg-slate-955 bg-slate-50 border dark:border-slate-850 border-slate-200"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-lg dark:bg-slate-800 bg-slate-200 flex items-center justify-center font-bold text-xs text-rose-500 shrink-0">
+                                {idx + 1}
+                              </div>
+                              {occupant ? (
+                                <div>
+                                  <div className="text-sm font-bold">{occupant}</div>
+                                  <div className="text-[10px] text-slate-500 font-medium">Студент</div>
+                                </div>
+                              ) : (
+                                <span className="text-xs text-slate-400 italic">Орун бош / Свободное место</span>
+                              )}
+                            </div>
+
+                            {/* Evict / Assign Action buttons */}
+                            {occupant ? (
+                              <button 
+                                onClick={() => evictStudentFromBed(idx)}
+                                className="px-2.5 py-1 border border-rose-500/20 hover:bg-rose-500/10 text-rose-500 text-2xs font-extrabold rounded-lg transition-colors cursor-pointer"
+                              >
+                                Чыгаруу
+                              </button>
+                            ) : (
+                              assigningBedIndex === idx ? (
+                                <div className="flex gap-1.5 items-center">
+                                  <input 
+                                    type="text" 
+                                    placeholder="Студент аты..." 
+                                    value={newStudentName}
+                                    onChange={(e) => setNewStudentName(e.target.value)}
+                                    className="bg-slate-100 dark:bg-slate-900 border dark:border-slate-800 border-slate-300 rounded-lg text-2xs px-2 py-1 w-28 focus:outline-none dark:text-white"
+                                  />
+                                  <button 
+                                    onClick={assignStudentToBed}
+                                    className="p-1 bg-emerald-500 text-white rounded-lg cursor-pointer"
+                                  >
+                                    <Check className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <button 
+                                  onClick={() => setAssigningBedIndex(idx)}
+                                  className="px-2.5 py-1 bg-gradient-to-r from-rose-500 to-violet-605 text-white text-2xs font-extrabold rounded-lg shadow-sm transition-transform cursor-pointer"
+                                >
+                                  + Заселить
+                                </button>
+                              )
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -482,7 +745,7 @@ export default function CommandantDashboard() {
             <p className="text-sm text-slate-450 max-w-md mx-auto leading-relaxed">
               {d.studentsCardDesc}
             </p>
-            <button className="px-5 py-2.5 dark:bg-slate-950 bg-slate-100 hover:bg-slate-200 dark:hover:bg-slate-900 border dark:border-slate-800 border-slate-250 text-xs font-bold rounded-xl transition-all flex items-center gap-2 mx-auto cursor-pointer">
+            <button className="px-5 py-2.5 dark:bg-slate-955 bg-slate-100 hover:bg-slate-200 dark:hover:bg-slate-900 border dark:border-slate-800 border-slate-250 text-xs font-bold rounded-xl transition-all flex items-center gap-2 mx-auto cursor-pointer">
               <Phone className="w-4 h-4 text-rose-500" />
               {d.btnDownloadContacts}
             </button>
