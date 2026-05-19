@@ -8,7 +8,8 @@ import { dictionaries } from '@/utils/dictionaries'
 import { 
   Shield, Landmark, Users, ClipboardList, CheckCircle, AlertCircle, Wrench,
   Check, LogOut, ChevronRight, Sparkles, MapPin, User, FileText, Send,
-  Menu, X, Sun, Moon, Globe, Printer, Bell
+  Menu, X, Sun, Moon, Globe, Printer, Bell, CreditCard, QrCode, UploadCloud,
+  FileCheck2, Eye, Receipt
 } from 'lucide-react'
 
 export default function StudentDashboard() {
@@ -35,10 +36,21 @@ export default function StudentDashboard() {
   const [notifOpen, setNotifOpen] = useState(false)
   const unreadCount = notifications.filter(n => !n.read).length
 
+  // Payments & OCR Scanner States
+  const [paymentStatus, setPaymentStatus] = useState<'paid' | 'unpaid'>('unpaid')
+  const [paymentHistory, setPaymentHistory] = useState([
+    { id: '1', amount: '12,000 сом', type: 'MBank', date: '01.09.2025', status: 'approved', ref: 'TXN-9821-OshSU' },
+    { id: '2', amount: '12,000 сом', type: 'Elcart', date: '01.02.2026', status: 'approved', ref: 'TXN-3011-OshSU' }
+  ])
+  const [payModalOpen, setPayModalOpen] = useState(false)
+  const [receiptFileName, setReceiptFileName] = useState('')
+  const [ocrScanning, setOcrScanning] = useState(false)
+  const [ocrStatus, setOcrStatus] = useState('')
+  const [ocrSuccess, setOcrSuccess] = useState(false)
+
   // Mock data for student housing details
   const [hasRoom, setHasRoom] = useState(true)
   const [applicationStatus, setApplicationStatus] = useState<'pending' | 'approved' | 'rejected'>('approved')
-  const [paymentStatus, setPaymentStatus] = useState<'paid' | 'unpaid'>('unpaid')
   
   const [assignedRoom, setAssignedRoom] = useState({
     dormName: language === 'kg' ? '№1 Жатакана (Башкы корпус)' : language === 'ru' ? 'Общежитие №1 (Главный корпус)' : 'Dormitory №1 (Main Campus)',
@@ -95,6 +107,57 @@ export default function StudentDashboard() {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })))
   }
 
+  // Simulated AI receipt scanner handler
+  const handleReceiptUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    
+    setReceiptFileName(file.name)
+    setOcrScanning(true)
+    setOcrSuccess(false)
+    
+    // Step-by-step scanner simulator log
+    setOcrStatus(language === 'kg' ? 'Сүрөт файлы окулуудо...' : language === 'ru' ? 'Чтение графического файла...' : 'Reading graphic file...')
+    
+    setTimeout(() => {
+      setOcrStatus(language === 'kg' ? 'ОшМУ реквизиттери текшерилүүдө...' : language === 'ru' ? 'Проверка реквизитов ОшГУ...' : 'Checking OshSU bank credentials...')
+      
+      setTimeout(() => {
+        setOcrStatus(language === 'kg' ? 'Төлөм суммасы эсептелүүдө (12,000 сом)...' : language === 'ru' ? 'Распознавание суммы платежа (12,000 сом)...' : 'Extracting payment total (12,000 KGS)...')
+        
+        setTimeout(() => {
+          setOcrScanning(false)
+          setOcrSuccess(true)
+          setPaymentStatus('paid')
+          
+          // Append new payment to logs archive!
+          const newTx = {
+            id: Math.random().toString(),
+            amount: '12,000 сом',
+            type: 'MBank (ИИ Сканер)',
+            date: new Date().toLocaleDateString('ru-RU'),
+            status: 'pending',
+            ref: `TXN-${Math.floor(1000 + Math.random() * 9000)}-OshSU`
+          }
+          setPaymentHistory(prev => [newTx, ...prev])
+          
+          // Push notification alert
+          setNotifications(prev => [
+            {
+              id: Math.random().toString(),
+              textKg: 'Сиздин жаңы МБанк чегиңиз ИИ тарабынан ийгиликтүү текшерилди жана комендантка жөнөтүлдү!',
+              textRu: 'Ваш новый чек МБанк успешно верифицирован ИИ и направлен коменданту!',
+              textEn: 'Your new MBank receipt has been successfully scanned by AI and sent to the commandant!',
+              date: 'Азыр эле',
+              read: false
+            },
+            ...prev
+          ])
+        }, 1200)
+      }, 1200)
+    }, 1200)
+  }
+
   return (
     <div className="min-h-screen transition-colors duration-300 dark:bg-slate-955 bg-slate-50 dark:text-white text-slate-900 font-sans flex flex-col lg:flex-row overflow-x-hidden">
       {/* Background Glows */}
@@ -108,7 +171,7 @@ export default function StudentDashboard() {
             <Shield className="w-5 h-5 text-rose-500" />
           </div>
           <span className="text-sm font-extrabold tracking-tight">
-            {d.oshsu} <span className="bg-gradient-to-r from-rose-500 to-violet-600 bg-clip-text text-transparent">{d.dormitorySystem}</span>
+            {d.oshsu} <span className="bg-gradient-to-r from-rose-500 to-violet-605 bg-clip-text text-transparent">{d.dormitorySystem}</span>
           </span>
         </div>
 
@@ -119,7 +182,7 @@ export default function StudentDashboard() {
               onClick={() => setNotifOpen(!notifOpen)}
               className="p-2 rounded-lg dark:bg-slate-955 bg-slate-100 border dark:border-slate-850 border-slate-200 text-xs cursor-pointer relative"
             >
-              <Bell className="w-4 h-4 text-rose-555" />
+              <Bell className="w-4 h-4 text-rose-500" />
               {unreadCount > 0 && (
                 <span className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-rose-500 animate-ping" />
               )}
@@ -203,7 +266,7 @@ export default function StudentDashboard() {
             <div>
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center justify-center gap-2 py-3 bg-rose-500/10 hover:bg-rose-500/20 text-rose-650 dark:text-rose-400 text-sm font-bold rounded-2xl border border-rose-500/10 transition-all cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 py-3 bg-rose-500/10 hover:bg-rose-500/20 text-rose-655 dark:text-rose-400 text-sm font-bold rounded-2xl border border-rose-500/10 transition-all cursor-pointer"
               >
                 <LogOut className="w-4 h-4" />
                 {d.logout}
@@ -228,7 +291,7 @@ export default function StudentDashboard() {
           </div>
 
           {/* Student Profile Card */}
-          <div className="p-5 rounded-2xl dark:bg-slate-950 bg-slate-100 border dark:border-slate-900 border-slate-200 space-y-4 shadow-sm">
+          <div className="p-5 rounded-2xl dark:bg-slate-955 bg-slate-105 border dark:border-slate-900 border-slate-200 space-y-4 shadow-sm">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl dark:bg-slate-800 bg-slate-200 flex items-center justify-center border dark:border-slate-700 border-slate-300 font-bold text-rose-500 shadow-md">
                 {studentName[0].toUpperCase()}
@@ -257,10 +320,10 @@ export default function StudentDashboard() {
         {/* Action controls / Logout */}
         <div className="space-y-3">
           {/* Controllers */}
-          <div className="flex items-center justify-between gap-2 p-2 dark:bg-slate-950 bg-slate-100 rounded-xl border dark:border-slate-900 border-slate-200">
+          <div className="flex items-center justify-between gap-2 p-2 dark:bg-slate-955 bg-slate-100 rounded-xl border dark:border-slate-900 border-slate-200">
             <button 
               onClick={toggleTheme} 
-              className="flex-1 p-2 rounded-lg hover:bg-rose-500/10 text-slate-500 hover:text-rose-650 transition-colors flex justify-center cursor-pointer"
+              className="flex-1 p-2 rounded-lg hover:bg-rose-500/10 text-slate-500 hover:text-rose-655 transition-colors flex justify-center cursor-pointer"
               title="Темный / Светлый режим"
             >
               {theme === 'dark' ? <Sun className="w-4.5 h-4.5 text-amber-500" /> : <Moon className="w-4.5 h-4.5" />}
@@ -279,7 +342,7 @@ export default function StudentDashboard() {
 
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 py-3.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-650 dark:text-rose-455 text-sm font-bold rounded-2xl border border-rose-500/10 transition-all duration-300 cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 py-3.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-655 dark:text-rose-455 text-sm font-bold rounded-2xl border border-rose-500/10 transition-all duration-300 cursor-pointer"
           >
             <LogOut className="w-4 h-4" />
             {d.logout}
@@ -343,13 +406,13 @@ export default function StudentDashboard() {
                     {/* DOWNLOAD AGREEMENT PDF TRIGGER BUTTON */}
                     <button
                       onClick={handlePrintContract}
-                      className="flex items-center gap-1.5 px-4.5 py-2.5 bg-gradient-to-r from-rose-500 to-violet-600 hover:brightness-110 text-white text-xs font-black rounded-xl transition-all cursor-pointer shadow-md shadow-rose-500/10"
+                      className="flex items-center gap-1.5 px-4.5 py-2.5 bg-gradient-to-r from-rose-500 to-violet-605 hover:brightness-110 text-white text-xs font-black rounded-xl transition-all cursor-pointer shadow-md shadow-rose-500/10"
                     >
                       <Printer className="w-4 h-4 shrink-0 animate-pulse" />
                       {language === 'kg' ? 'Келишимди жүктөө (PDF)' : language === 'ru' ? 'Скачать Договор (PDF)' : 'Download Contract (PDF)'}
                     </button>
 
-                    <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-605 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider shrink-0">
+                    <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-450 text-xs font-bold uppercase tracking-wider shrink-0">
                       {d.assignedStatus}
                     </span>
                   </div>
@@ -401,7 +464,7 @@ export default function StudentDashboard() {
             <div className="p-6 md:p-8 rounded-3xl dark:bg-slate-900/30 bg-white border dark:border-slate-900 border-slate-200 shadow-md space-y-6">
               <h3 className="text-xl font-bold">{d.appStatusTitle}</h3>
               
-              <div className="flex items-center gap-5 p-6 rounded-2xl dark:bg-slate-950 bg-slate-100 border dark:border-slate-900 border-slate-200">
+              <div className="flex items-center gap-5 p-6 rounded-2xl dark:bg-slate-955 bg-slate-100 border dark:border-slate-900 border-slate-200">
                 <div className={`p-3.5 rounded-xl border ${
                   applicationStatus === 'approved' 
                     ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-450' 
@@ -421,19 +484,22 @@ export default function StudentDashboard() {
             </div>
           </div>
 
-          {/* Help Desk (Right Column) & Payments */}
+          {/* Help Desk & Dynamic Payment Archive Panel (Right Column) */}
           <div className="space-y-8">
-            {/* Payment Panel */}
+            {/* PAYMENT LOGS & SCANNER INTERACTIVE PANEL */}
             <div className="p-6 md:p-8 rounded-3xl dark:bg-slate-900/30 bg-white border dark:border-slate-900 border-slate-200 shadow-md space-y-6">
-              <h3 className="text-xl font-bold">{d.dormPaymentTitle}</h3>
+              <h3 className="text-xl font-bold flex items-center gap-2">
+                <CreditCard className="w-5 h-5 text-rose-550 shrink-0" />
+                {d.dormPaymentTitle}
+              </h3>
               
               <div className="p-6 rounded-2xl dark:bg-slate-950 bg-slate-100 border dark:border-slate-900 border-slate-200 space-y-4">
                 <div className="flex justify-between items-center text-sm font-semibold">
                   <span className="text-slate-400">{d.paymentStatusLabel}</span>
                   <span className={`px-2.5 py-1 text-2xs font-extrabold rounded-full ${
                     paymentStatus === 'paid' 
-                      ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-605 dark:text-emerald-450' 
-                      : 'bg-rose-500/10 border-rose-500/20 text-rose-500 dark:text-rose-400'
+                      ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-450' 
+                      : 'bg-rose-500/10 border border-rose-500/20 text-rose-505 dark:text-rose-400'
                   }`}>
                     {paymentStatus === 'paid' ? d.paymentPaid : d.paymentUnpaid}
                   </span>
@@ -442,12 +508,47 @@ export default function StudentDashboard() {
                 <div className="h-px dark:bg-slate-900 bg-slate-200" />
                 
                 <div className="text-xs text-slate-400 leading-relaxed">
-                  {d.paymentDesc}
+                  {language === 'kg' 
+                    ? 'Акыркы семестр үчүн ижара акысы: 12,000 сом. МБанк аркылуу төлөп, чекти ИИ сканерине жүктөңүз.'
+                    : language === 'ru'
+                    ? 'Аренда за текущий семестр: 12,000 сом. Оплатите через МБанк и загрузите квитанцию в ИИ сканер.'
+                    : 'Rent due for current semester: 12,000 KGS. Pay via MBank and upload receipt to AI OCR scanner.'
+                  }
                 </div>
 
-                <button className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-rose-500 to-violet-605 hover:brightness-110 text-white font-bold rounded-xl transition-all duration-300 cursor-pointer shadow-lg shadow-rose-500/10">
-                  {d.btnPay}
+                {/* PAY NOW TRIGGER BUTTON */}
+                <button 
+                  onClick={() => setPayModalOpen(true)}
+                  className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-rose-500 to-violet-650 hover:brightness-110 text-white font-bold rounded-xl transition-all duration-300 cursor-pointer shadow-lg shadow-rose-500/10 text-xs"
+                >
+                  <CreditCard className="w-4 h-4 shrink-0" />
+                  {language === 'kg' ? 'МБанк / Элкарт менен төлөө' : language === 'ru' ? 'Оплатить через MBank / Элкарт' : 'Pay via MBank / Elcart'}
                 </button>
+              </div>
+
+              {/* PAYMENT ARCHIVE LOGS */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">{language === 'kg' ? 'Төлөмдөрдүн тарыхы' : language === 'ru' ? 'Архив транзакций' : 'Billing Archive'}</h4>
+                <div className="space-y-2 max-h-[180px] overflow-y-auto pr-1">
+                  {paymentHistory.map(tx => (
+                    <div key={tx.id} className="p-3.5 rounded-xl dark:bg-slate-950 bg-slate-50 border dark:border-slate-850 border-slate-200 flex items-center justify-between text-2xs">
+                      <div>
+                        <div className="font-bold">{tx.amount}</div>
+                        <div className="text-[10px] text-slate-400 mt-0.5">{tx.date} • {tx.type}</div>
+                      </div>
+                      <div className="text-right">
+                        <span className={`px-2 py-0.5 font-extrabold rounded-full ${
+                          tx.status === 'approved' 
+                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-450' 
+                            : 'bg-amber-500/10 text-amber-600 dark:text-amber-500'
+                        }`}>
+                          {tx.status === 'approved' ? (language === 'kg' ? 'Кабыл алынды' : 'Одобрено') : (language === 'kg' ? 'Күтүүдө' : 'В обработке')}
+                        </span>
+                        <div className="text-[9px] text-slate-400 mt-1 font-semibold">{tx.ref}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -460,7 +561,7 @@ export default function StudentDashboard() {
               
               <form onSubmit={handleSubmitTicket} className="space-y-4">
                 {ticketSuccess && (
-                  <div className="flex items-start gap-2.5 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-605 dark:text-emerald-450 rounded-xl text-xs animate-fadeIn">
+                  <div className="flex items-start gap-2.5 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-450 rounded-xl text-xs animate-fadeIn">
                     <CheckCircle className="w-4 h-4 shrink-0" />
                     <span>{d.ticketSuccessMsg}</span>
                   </div>
@@ -510,6 +611,111 @@ export default function StudentDashboard() {
           </div>
         </div>
       </main>
+
+      {/* MBANK / ELCART INTERACTIVE PAYMENT SCANNER MODAL */}
+      {payModalOpen && (
+        <div className="fixed inset-0 bg-slate-955/70 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fadeIn" onClick={() => setPayModalOpen(false)}>
+          <div 
+            className="w-full max-w-lg dark:bg-slate-900 bg-white border dark:border-slate-800 border-slate-200 rounded-3xl p-8 shadow-2xl space-y-6 relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b dark:border-slate-850 border-slate-200 pb-4">
+              <div className="flex items-center gap-2">
+                <QrCode className="w-6 h-6 text-rose-500" />
+                <div>
+                  <h4 className="text-xl font-black">{language === 'kg' ? 'ОшМУ төлөм терминалы' : language === 'ru' ? 'Платежный терминал ОшГУ' : 'OshSU Payment Gateway'}</h4>
+                  <p className="text-xs text-slate-500 mt-0.5">Официалдуу MBank / Элкарт транзакциясы</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setPayModalOpen(false)}
+                className="p-1 rounded-xl hover:bg-slate-500/10 transition-all cursor-pointer"
+              >
+                <X className="w-6 h-6 text-slate-400" />
+              </button>
+            </div>
+
+            {/* Requisites Reusable component */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-5 rounded-2xl dark:bg-slate-950 bg-slate-100 border dark:border-slate-850 border-slate-250 text-xs">
+              <div className="space-y-1">
+                <span className="text-slate-500 font-semibold">Алуучу / Получатель:</span>
+                <div className="font-extrabold text-rose-550">ОшМУ Студенттик Дирекциясы</div>
+              </div>
+              <div className="space-y-1">
+                <span className="text-slate-500 font-semibold">Эсеп номери / Счет получателя:</span>
+                <div className="font-extrabold tracking-wider">109000331002</div>
+              </div>
+              <div className="space-y-1 md:col-span-2">
+                <span className="text-slate-500 font-semibold">Дареги / Назначение:</span>
+                <div className="font-bold text-slate-700 dark:text-slate-300">№1 Жатакана, 102-бөлмө ижарасы</div>
+              </div>
+            </div>
+
+            {/* DRAG AND DROP RECEIPTS UPLOADER */}
+            <div className="space-y-3">
+              <label className="text-2xs font-extrabold text-slate-500 uppercase tracking-widest">{language === 'kg' ? 'Төлөм чекти жүктөө (ИИ OCR Сканер)' : language === 'ru' ? 'Загрузите чек оплаты (ИИ OCR Сканер)' : 'Upload Receipt Screenshot (AI OCR Scanner)'}</label>
+              
+              <div className="relative border-2 border-dashed dark:border-slate-800 border-slate-300 hover:border-rose-500/50 rounded-2xl p-8 text-center transition-all cursor-pointer">
+                <input 
+                  type="file" 
+                  accept="image/*"
+                  onChange={handleReceiptUpload}
+                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
+                />
+                
+                <div className="space-y-3 pointer-events-none">
+                  <UploadCloud className="w-10 h-10 text-rose-500 mx-auto animate-bounce" />
+                  <div>
+                    <div className="text-xs font-bold">{receiptFileName || (language === 'kg' ? 'Чек файлын тандаңыз же бул жерге сүйрөңүз' : language === 'ru' ? 'Выберите файл чека или перетащите сюда' : 'Select receipt file or drag here')}</div>
+                    <p className="text-[10px] text-slate-500 mt-1">PNG, JPG форматында (Макс. 5MB)</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* AI OCR NEON SCANNER SIMULATOR LOGS */}
+            {ocrScanning && (
+              <div className="p-4.5 rounded-2xl bg-rose-500/5 border border-rose-500/10 space-y-3 text-xs animate-fadeIn">
+                <div className="flex items-center justify-between font-bold">
+                  <span className="flex items-center gap-1.5 text-rose-500">
+                    <Sparkles className="w-4 h-4 animate-spin" />
+                    {language === 'kg' ? 'ИИ текшерүү жүрүүдө...' : 'ИИ верификация чека...'}
+                  </span>
+                  <span className="text-2xs text-slate-500">OCR Scanner Active</span>
+                </div>
+                
+                {/* Neon progress bar */}
+                <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-rose-500 via-pink-500 to-violet-500 rounded-full animate-pulse w-full" />
+                </div>
+                
+                <p className="text-2xs text-slate-400 italic text-center font-medium">{ocrStatus}</p>
+              </div>
+            )}
+
+            {/* AI SCANNER COMPLETED SUCCESS STATE */}
+            {ocrSuccess && (
+              <div className="p-5 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 space-y-2 text-xs text-center animate-fadeIn text-emerald-600 dark:text-emerald-450">
+                <FileCheck2 className="w-8 h-8 mx-auto animate-bounce text-emerald-500" />
+                <h5 className="font-extrabold text-sm">{language === 'kg' ? 'Чек ийгиликтүү таанылды!' : 'Чек успешно верифицирован!'}</h5>
+                <p className="text-2xs leading-relaxed max-w-sm mx-auto text-slate-500 font-medium">
+                  {language === 'kg' 
+                    ? 'Сумма: 12,000 сом. Дата: 19.05.2026. Төлөм ийгиликтүү катталды жана кабыл алуу үчүн жиберилди.'
+                    : 'Сумма: 12,000 сом. Дата: 19.05.2026. Платеж зарегистрирован в архиве транзакций и направлен коменданту.'
+                  }
+                </p>
+                <button 
+                  onClick={() => setPayModalOpen(false)}
+                  className="mt-3 px-4 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl text-2xs cursor-pointer"
+                >
+                  OK / Жабуу
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* HIDDEN PRINT-ONLY BILATERAL RENTAL AGREEMENT */}
       <div id="printable-contract" className="hidden print:block p-10 leading-relaxed text-black max-w-4xl mx-auto">
