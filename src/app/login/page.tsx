@@ -65,7 +65,7 @@ export default function LoginPage() {
         }, 1500)
 
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -75,13 +75,53 @@ export default function LoginPage() {
           },
         })
 
-        if (error) throw error
+        if (signUpError) throw signUpError
 
-        setSuccessMsg('Каттоо ийгиликтүү бүттү! Электрондук почтаңызды текшерип, ырастаңыз.')
-        setEmail('')
-        setPassword('')
-        setFullName('')
-        setMode('signin')
+        setSuccessMsg('Каттоо ийгиликтүү өттү! Системага кирүү жүрүүдө...')
+
+        // Auto-login after successful registration
+        try {
+          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          })
+
+          if (signInError) {
+            // Fallback to manual confirmation alert if confirmation is enabled
+            setSuccessMsg('Каттоо ийгиликтүү бүттү! Сураныч, электрондук почтаңызды текшерип, аккаунтуңузду ырастаңыз.')
+            setEmail('')
+            setPassword('')
+            setFullName('')
+            setMode('signin')
+            return
+          }
+
+          // Fetch role to route correctly
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', signInData.user.id)
+            .single()
+
+          const role = profile?.role
+          setTimeout(() => {
+            if (role === 'admin') {
+              router.push('/admin')
+            } else if (role === 'commandant') {
+              router.push('/commandant')
+            } else {
+              router.push('/dashboard')
+            }
+            router.refresh()
+          }, 1500)
+        } catch {
+          // General fallback
+          setSuccessMsg('Каттоо ийгиликтүү бүттү! Эми кирүү барагынан кире аласыз.')
+          setEmail('')
+          setPassword('')
+          setFullName('')
+          setMode('signin')
+        }
       }
     } catch (err: any) {
       setErrorMsg(err.message || 'Ката кетти. Кайра аракет кылып көрүңүз.')
