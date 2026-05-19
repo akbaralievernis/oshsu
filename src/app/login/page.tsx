@@ -137,7 +137,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center transition-colors duration-300 dark:bg-slate-955 bg-slate-50 font-sans overflow-hidden py-12 px-4 sm:px-6 lg:px-8">
+    <div className="relative min-h-screen flex items-center justify-center transition-colors duration-300 dark:bg-slate-950 bg-slate-50 font-sans overflow-hidden py-12 px-4 sm:px-6 lg:px-8">
       {/* Floating Theme & Language controllers */}
       <div className="absolute top-6 right-6 z-50 flex items-center gap-2">
         <button
@@ -306,7 +306,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder={d.passwordPlaceholder}
-                  className="w-full dark:bg-slate-955 bg-white border dark:border-slate-800 border-slate-200 dark:text-white text-slate-900 rounded-2xl py-3 pl-11 pr-4 placeholder-slate-400 dark:placeholder-slate-655 focus:outline-none focus:ring-1 focus:ring-rose-500 focus:border-rose-500 transition-all text-sm"
+                  className="w-full dark:bg-slate-900 bg-white border dark:border-slate-800 border-slate-200 dark:text-white text-slate-900 rounded-2xl py-3 pl-11 pr-4 placeholder-slate-400 dark:placeholder-slate-655 focus:outline-none focus:ring-1 focus:ring-rose-500 focus:border-rose-500 transition-all text-sm"
                 />
               </div>
             </div>
@@ -350,19 +350,19 @@ export default function LoginPage() {
           <div className="grid grid-cols-3 gap-2 pt-1">
             <button 
               onClick={() => router.push('/dashboard')}
-              className="px-2 py-3 dark:bg-slate-950 bg-slate-100 hover:bg-rose-500/10 hover:border-rose-500/20 border dark:border-slate-900 border-slate-250 text-[10px] font-black rounded-xl transition-all cursor-pointer shadow-sm"
+              className="px-2 py-3 dark:bg-slate-900 bg-slate-100 hover:bg-rose-500/10 hover:border-rose-500/20 border dark:border-slate-800 border-slate-250 text-[10px] font-black rounded-xl transition-all cursor-pointer shadow-sm"
             >
               👩‍🎓 {language === 'kg' ? 'Студент' : language === 'ru' ? 'Студент' : 'Student'}
             </button>
             <button 
               onClick={() => router.push('/commandant')}
-              className="px-2 py-3 dark:bg-slate-955 bg-slate-100 hover:bg-rose-500/10 hover:border-rose-500/20 border dark:border-slate-900 border-slate-250 text-[10px] font-black rounded-xl transition-all cursor-pointer shadow-sm"
+              className="px-2 py-3 dark:bg-slate-900 bg-slate-100 hover:bg-rose-500/10 hover:border-rose-500/20 border dark:border-slate-800 border-slate-250 text-[10px] font-black rounded-xl transition-all cursor-pointer shadow-sm"
             >
               🔑 {language === 'kg' ? 'Комендант' : language === 'ru' ? 'Комендант' : 'Commandant'}
             </button>
             <button 
               onClick={() => router.push('/admin')}
-              className="px-2 py-3 dark:bg-slate-955 bg-slate-100 hover:bg-rose-500/10 hover:border-rose-500/20 border dark:border-slate-900 border-slate-250 text-[10px] font-black rounded-xl transition-all cursor-pointer shadow-sm"
+              className="px-2 py-3 dark:bg-slate-900 bg-slate-100 hover:bg-rose-500/10 hover:border-rose-500/20 border dark:border-slate-800 border-slate-250 text-[10px] font-black rounded-xl transition-all cursor-pointer shadow-sm"
             >
               🛡️ {language === 'kg' ? 'Админ' : language === 'ru' ? 'Админ' : 'Admin'}
             </button>

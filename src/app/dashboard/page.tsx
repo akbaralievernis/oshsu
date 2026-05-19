@@ -159,7 +159,7 @@ export default function StudentDashboard() {
   }
 
   return (
-    <div className="min-h-screen transition-colors duration-300 dark:bg-slate-955 bg-slate-50 dark:text-white text-slate-900 font-sans flex flex-col lg:flex-row overflow-x-hidden">
+    <div className="min-h-screen transition-colors duration-300 dark:bg-slate-950 bg-slate-50 dark:text-white text-slate-900 font-sans flex flex-col lg:flex-row overflow-x-hidden">
       {/* Background Glows */}
       <div className="absolute top-0 left-0 w-[300px] h-[300px] rounded-full dark:bg-slate-900 bg-rose-100/30 blur-[150px] opacity-60 pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full dark:bg-violet-955/10 bg-violet-100/30 blur-[150px] opacity-40 pointer-events-none" />
@@ -180,7 +180,7 @@ export default function StudentDashboard() {
           <div className="relative">
             <button
               onClick={() => setNotifOpen(!notifOpen)}
-              className="p-2 rounded-lg dark:bg-slate-955 bg-slate-100 border dark:border-slate-850 border-slate-200 text-xs cursor-pointer relative"
+              className="p-2 rounded-lg dark:bg-slate-950 bg-slate-100 border dark:border-slate-850 border-slate-200 text-xs cursor-pointer relative"
             >
               <Bell className="w-4 h-4 text-rose-500" />
               {unreadCount > 0 && (
@@ -209,7 +209,7 @@ export default function StudentDashboard() {
           {/* Theme Switcher */}
           <button
             onClick={toggleTheme}
-            className="p-2 rounded-lg dark:bg-slate-955 bg-slate-100 border dark:border-slate-850 border-slate-200 text-xs cursor-pointer animate-pulse"
+            className="p-2 rounded-lg dark:bg-slate-950 bg-slate-100 border dark:border-slate-850 border-slate-200 text-xs cursor-pointer animate-pulse"
           >
             {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-500" /> : <Moon className="w-4 h-4 text-slate-700" />}
           </button>
@@ -217,7 +217,7 @@ export default function StudentDashboard() {
           {/* Language menu */}
           <button
             onClick={() => setLangMenuOpen(!langMenuOpen)}
-            className="flex items-center gap-1 px-2.5 py-2 rounded-lg dark:bg-slate-955 bg-slate-100 border dark:border-slate-855 border-slate-200 text-xs font-bold cursor-pointer"
+            className="flex items-center gap-1 px-2.5 py-2 rounded-lg dark:bg-slate-950 bg-slate-100 border dark:border-slate-855 border-slate-200 text-xs font-bold cursor-pointer"
           >
             <Globe className="w-3.5 h-3.5 text-rose-500" />
             <span className="uppercase">{language}</span>
@@ -250,7 +250,7 @@ export default function StudentDashboard() {
           >
             <div className="space-y-6">
               {/* Profile Card */}
-              <div className="p-4 rounded-2xl dark:bg-slate-955 bg-slate-100 border dark:border-slate-855 border-slate-200 space-y-4">
+              <div className="p-4 rounded-2xl dark:bg-slate-950 bg-slate-100 border dark:border-slate-855 border-slate-200 space-y-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-slate-855 dark:bg-slate-800 flex items-center justify-center border border-slate-255 dark:border-slate-700 font-bold text-rose-500 shadow-md">
                     {studentName[0].toUpperCase()}
@@ -291,7 +291,7 @@ export default function StudentDashboard() {
           </div>
 
           {/* Student Profile Card */}
-          <div className="p-5 rounded-2xl dark:bg-slate-955 bg-slate-105 border dark:border-slate-900 border-slate-200 space-y-4 shadow-sm">
+          <div className="p-5 rounded-2xl dark:bg-slate-950 bg-slate-105 border dark:border-slate-900 border-slate-200 space-y-4 shadow-sm">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl dark:bg-slate-800 bg-slate-200 flex items-center justify-center border dark:border-slate-700 border-slate-300 font-bold text-rose-500 shadow-md">
                 {studentName[0].toUpperCase()}
@@ -320,7 +320,7 @@ export default function StudentDashboard() {
         {/* Action controls / Logout */}
         <div className="space-y-3">
           {/* Controllers */}
-          <div className="flex items-center justify-between gap-2 p-2 dark:bg-slate-955 bg-slate-100 rounded-xl border dark:border-slate-900 border-slate-200">
+          <div className="flex items-center justify-between gap-2 p-2 dark:bg-slate-950 bg-slate-100 rounded-xl border dark:border-slate-900 border-slate-200">
             <button 
               onClick={toggleTheme} 
               className="flex-1 p-2 rounded-lg hover:bg-rose-500/10 text-slate-500 hover:text-rose-655 transition-colors flex justify-center cursor-pointer"
@@ -418,7 +418,7 @@ export default function StudentDashboard() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 rounded-2xl dark:bg-slate-955 bg-slate-100 border dark:border-slate-900 border-slate-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 rounded-2xl dark:bg-slate-950 bg-slate-100 border dark:border-slate-900 border-slate-200">
                   <div className="space-y-1">
                     <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{d.dormNameLabel}</div>
                     <div className="text-sm font-bold flex items-center gap-1.5">
@@ -464,7 +464,7 @@ export default function StudentDashboard() {
             <div className="p-6 md:p-8 rounded-3xl dark:bg-slate-900/30 bg-white border dark:border-slate-900 border-slate-200 shadow-md space-y-6">
               <h3 className="text-xl font-bold">{d.appStatusTitle}</h3>
               
-              <div className="flex items-center gap-5 p-6 rounded-2xl dark:bg-slate-955 bg-slate-100 border dark:border-slate-900 border-slate-200">
+              <div className="flex items-center gap-5 p-6 rounded-2xl dark:bg-slate-950 bg-slate-100 border dark:border-slate-900 border-slate-200">
                 <div className={`p-3.5 rounded-xl border ${
                   applicationStatus === 'approved' 
                     ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-450' 
@@ -575,7 +575,7 @@ export default function StudentDashboard() {
                     value={ticketTitle}
                     onChange={(e) => setTicketTitle(e.target.value)}
                     placeholder={d.ticketPlaceholder}
-                    className="w-full dark:bg-slate-955 bg-white border dark:border-slate-900 border-slate-200 dark:text-white text-slate-900 rounded-xl py-3 px-4 placeholder-slate-400 dark:placeholder-slate-700 text-xs focus:outline-none focus:ring-1 focus:ring-rose-500 focus:border-rose-500 transition-all"
+                    className="w-full dark:bg-slate-950 bg-white border dark:border-slate-900 border-slate-200 dark:text-white text-slate-900 rounded-xl py-3 px-4 placeholder-slate-400 dark:placeholder-slate-700 text-xs focus:outline-none focus:ring-1 focus:ring-rose-500 focus:border-rose-500 transition-all"
                   />
                 </div>
 
@@ -584,7 +584,7 @@ export default function StudentDashboard() {
                   <select
                     value={ticketUrgency}
                     onChange={(e) => setTicketUrgency(e.target.value)}
-                    className="w-full dark:bg-slate-955 bg-white border dark:border-slate-900 border-slate-200 dark:text-white text-slate-900 rounded-xl py-3 px-4 text-xs focus:outline-none focus:ring-1 focus:ring-rose-500 focus:border-rose-500 transition-all cursor-pointer"
+                    className="w-full dark:bg-slate-950 bg-white border dark:border-slate-900 border-slate-200 dark:text-white text-slate-900 rounded-xl py-3 px-4 text-xs focus:outline-none focus:ring-1 focus:ring-rose-500 focus:border-rose-500 transition-all cursor-pointer"
                   >
                     <option value="low">{d.ticketUrgencyLow}</option>
                     <option value="medium">{d.ticketUrgencyMedium}</option>
@@ -614,7 +614,7 @@ export default function StudentDashboard() {
 
       {/* MBANK / ELCART INTERACTIVE PAYMENT SCANNER MODAL */}
       {payModalOpen && (
-        <div className="fixed inset-0 bg-slate-955/70 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fadeIn" onClick={() => setPayModalOpen(false)}>
+        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fadeIn" onClick={() => setPayModalOpen(false)}>
           <div 
             className="w-full max-w-lg dark:bg-slate-900 bg-white border dark:border-slate-800 border-slate-200 rounded-3xl p-8 shadow-2xl space-y-6 relative"
             onClick={(e) => e.stopPropagation()}

@@ -231,7 +231,7 @@ export default function AIAssistant() {
           </div>
 
           {/* Quick FAQ Selectors */}
-          <div className="px-4 py-2 dark:bg-slate-955 bg-slate-100/50 border-t dark:border-slate-900 border-slate-200">
+          <div className="px-4 py-2 dark:bg-slate-900 bg-slate-100/50 border-t dark:border-slate-900 border-slate-200">
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
               {presetQuestions.map((q, idx) => {
                 const text = language === 'kg' ? q.kg : language === 'ru' ? q.ru : q.en

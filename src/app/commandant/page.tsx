@@ -194,7 +194,7 @@ export default function CommandantDashboard() {
   const filteredRooms = rooms.filter(r => r.floor === selectedFloor)
 
   return (
-    <div className="min-h-screen transition-colors duration-300 dark:bg-slate-955 bg-slate-50 dark:text-white text-slate-900 font-sans flex flex-col lg:flex-row overflow-x-hidden">
+    <div className="min-h-screen transition-colors duration-300 dark:bg-slate-950 bg-slate-50 dark:text-white text-slate-900 font-sans flex flex-col lg:flex-row overflow-x-hidden">
       {/* Background Gradients */}
       <div className="absolute top-0 left-0 w-[300px] h-[300px] rounded-full dark:bg-slate-900 bg-rose-100/30 blur-[150px] opacity-60 pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full dark:bg-violet-955/10 bg-violet-100/30 blur-[150px] opacity-40 pointer-events-none" />
@@ -239,7 +239,7 @@ export default function CommandantDashboard() {
           </div>
 
           {/* Theme switcher */}
-          <button onClick={toggleTheme} className="p-2 rounded-lg dark:bg-slate-955 bg-slate-100 border dark:border-slate-850 border-slate-200 text-xs cursor-pointer animate-pulse">
+          <button onClick={toggleTheme} className="p-2 rounded-lg dark:bg-slate-950 bg-slate-100 border dark:border-slate-850 border-slate-200 text-xs cursor-pointer animate-pulse">
             {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-500" /> : <Moon className="w-4 h-4 text-slate-700" />}
           </button>
 
@@ -262,7 +262,7 @@ export default function CommandantDashboard() {
 
           <button 
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2.5 rounded-xl dark:bg-slate-955 bg-slate-100 border dark:border-slate-855 border-slate-200 text-rose-500 cursor-pointer"
+            className="p-2.5 rounded-xl dark:bg-slate-950 bg-slate-100 border dark:border-slate-855 border-slate-200 text-rose-500 cursor-pointer"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -271,7 +271,7 @@ export default function CommandantDashboard() {
 
       {/* MOBILE SLIDE-IN MENU */}
       {mobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 bg-slate-955/60 backdrop-blur-md z-40 animate-fadeIn" onClick={() => setMobileMenuOpen(false)}>
+        <div className="lg:hidden fixed inset-0 bg-slate-950/60 backdrop-blur-md z-40 animate-fadeIn" onClick={() => setMobileMenuOpen(false)}>
           <aside className="w-72 max-w-[80vw] h-full dark:bg-slate-900 bg-white p-6 border-r dark:border-slate-850 border-slate-200 flex flex-col justify-between" onClick={(e) => e.stopPropagation()}>
             <div className="space-y-6">
               <div className="flex items-center gap-3">
@@ -391,7 +391,7 @@ export default function CommandantDashboard() {
         {/* Action controls & User info */}
         <div className="space-y-3">
           {/* Controllers */}
-          <div className="flex items-center justify-between gap-2 p-2 dark:bg-slate-955 bg-slate-100 rounded-xl border dark:border-slate-900 border-slate-200">
+          <div className="flex items-center justify-between gap-2 p-2 dark:bg-slate-950 bg-slate-100 rounded-xl border dark:border-slate-900 border-slate-200">
             <button 
               onClick={toggleTheme} 
               className="flex-1 p-2 rounded-lg hover:bg-rose-500/10 text-slate-500 hover:text-rose-555 transition-colors flex justify-center cursor-pointer"
@@ -527,7 +527,7 @@ export default function CommandantDashboard() {
               </div>
 
               {/* Floor Switcher */}
-              <div className="flex p-1 dark:bg-slate-955 bg-slate-200/80 rounded-xl border dark:border-slate-900 border-slate-300">
+              <div className="flex p-1 dark:bg-slate-950 bg-slate-200/80 rounded-xl border dark:border-slate-900 border-slate-300">
                 <button
                   onClick={() => { setSelectedFloor(1); setSelectedRoom(null); }}
                   className={`px-4 py-2 text-xs font-black rounded-lg transition-all cursor-pointer ${selectedFloor === 1 ? 'bg-gradient-to-r from-rose-500 to-violet-605 text-white shadow-md' : 'text-slate-555 hover:text-rose-505'}`}
@@ -558,10 +558,10 @@ export default function CommandantDashboard() {
                         room.status === 'dirty'
                           ? 'border-rose-550/40 bg-rose-500/5 animate-pulse'
                           : isFull
-                          ? 'border-violet-600 bg-gradient-to-br from-violet-955/20 to-slate-955/20'
+                          ? 'border-violet-600 bg-gradient-to-br from-violet-955/20 to-slate-950/20'
                           : isEmpty
                           ? 'border-dashed border-emerald-500/40 bg-emerald-500/5'
-                          : 'border-slate-350 dark:border-slate-800 dark:bg-slate-955 bg-slate-50'
+                          : 'border-slate-350 dark:border-slate-800 dark:bg-slate-950 bg-slate-50'
                       }`}
                     >
                       <span className="absolute top-3 right-3 flex h-2 w-2">
@@ -587,7 +587,7 @@ export default function CommandantDashboard() {
               </div>
 
               {/* CENTRAL HALLWAY (КОРИДОР) */}
-              <div className="w-full h-14 bg-gradient-to-r dark:from-slate-950 dark:via-slate-900 dark:to-slate-955 from-slate-200 via-slate-100 to-slate-200 rounded-xl flex items-center justify-between px-8 border dark:border-slate-850 border-slate-300">
+              <div className="w-full h-14 bg-gradient-to-r dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 from-slate-200 via-slate-100 to-slate-200 rounded-xl flex items-center justify-between px-8 border dark:border-slate-850 border-slate-300">
                 <span className="text-[10px] font-black text-slate-555 uppercase tracking-widest">{language === 'kg' ? '◀ БАШКЫ ЧЫГУУ / ВЫХОД' : '◀ ГЛАВНЫЙ ВЫХОД / EXIT'}</span>
                 <span className="text-xs font-black bg-gradient-to-r from-rose-500 to-violet-605 bg-clip-text text-transparent uppercase tracking-widest">{language === 'kg' ? 'КОРИДОР / ХОЛЛ' : 'ЦЕНТРАЛЬНЫЙ КОРИДОР'}</span>
                 <span className="text-[10px] font-black text-slate-555 uppercase tracking-widest">{language === 'kg' ? 'КҮЗӨТ / ОХРАНА ▶' : 'ПОСТ ДЕЖУРНОГО ▶'}</span>
@@ -606,10 +606,10 @@ export default function CommandantDashboard() {
                         room.status === 'dirty'
                           ? 'border-rose-550/40 bg-rose-500/5 animate-pulse'
                           : isFull
-                          ? 'border-violet-605 bg-gradient-to-br from-violet-955/20 to-slate-955/20'
+                          ? 'border-violet-605 bg-gradient-to-br from-violet-955/20 to-slate-950/20'
                           : isEmpty
                           ? 'border-dashed border-emerald-500/40 bg-emerald-500/5'
-                          : 'border-slate-350 dark:border-slate-800 dark:bg-slate-955 bg-slate-50'
+                          : 'border-slate-350 dark:border-slate-800 dark:bg-slate-950 bg-slate-50'
                       }`}
                     >
                       <span className="absolute top-3 right-3 flex h-2 w-2">
@@ -632,7 +632,7 @@ export default function CommandantDashboard() {
 
             {/* SELECTED ROOM INTERACTIVE MODAL OVERLAY */}
             {selectedRoom && (
-              <div className="fixed inset-0 bg-slate-955/70 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fadeIn" onClick={() => setSelectedRoom(null)}>
+              <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fadeIn" onClick={() => setSelectedRoom(null)}>
                 <div 
                   className="w-full max-w-lg dark:bg-slate-900 bg-white border dark:border-slate-800 border-slate-200 rounded-3xl p-8 shadow-2xl space-y-6"
                   onClick={(e) => e.stopPropagation()}
@@ -652,7 +652,7 @@ export default function CommandantDashboard() {
                   </div>
 
                   {/* Room Config Status */}
-                  <div className="flex items-center justify-between p-4 rounded-2xl dark:bg-slate-955 bg-slate-100 border dark:border-slate-850 border-slate-200 text-xs">
+                  <div className="flex items-center justify-between p-4 rounded-2xl dark:bg-slate-950 bg-slate-100 border dark:border-slate-850 border-slate-200 text-xs">
                     <div className="flex items-center gap-2">
                       <span className={`px-2.5 py-1 font-extrabold rounded-full ${selectedRoom.status === 'clean' ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-450' : 'bg-rose-500/10 border border-rose-500/20 text-rose-500'}`}>
                         {selectedRoom.status === 'clean' ? d.roomClean : d.roomDirty}
@@ -676,7 +676,7 @@ export default function CommandantDashboard() {
                         return (
                           <div 
                             key={idx} 
-                            className="flex items-center justify-between p-4 rounded-xl dark:bg-slate-955 bg-slate-50 border dark:border-slate-855 border-slate-200"
+                            className="flex items-center justify-between p-4 rounded-xl dark:bg-slate-950 bg-slate-50 border dark:border-slate-855 border-slate-200"
                           >
                             <div className="flex items-center gap-3">
                               <div className="w-8 h-8 rounded-lg dark:bg-slate-800 bg-slate-200 flex items-center justify-center font-bold text-xs text-rose-500 shrink-0">
@@ -816,7 +816,7 @@ export default function CommandantDashboard() {
             <p className="text-sm text-slate-450 max-w-md mx-auto leading-relaxed">
               {d.studentsCardDesc}
             </p>
-            <button className="px-5 py-2.5 dark:bg-slate-955 bg-slate-100 hover:bg-slate-200 dark:hover:bg-slate-900 border dark:border-slate-800 border-slate-250 text-xs font-bold rounded-xl transition-all flex items-center gap-2 mx-auto cursor-pointer">
+            <button className="px-5 py-2.5 dark:bg-slate-950 bg-slate-100 hover:bg-slate-200 dark:hover:bg-slate-900 border dark:border-slate-800 border-slate-250 text-xs font-bold rounded-xl transition-all flex items-center gap-2 mx-auto cursor-pointer">
               <Phone className="w-4 h-4 text-rose-500" />
               {d.btnDownloadContacts}
             </button>
