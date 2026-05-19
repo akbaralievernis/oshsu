@@ -73,18 +73,38 @@ export default function LoginPage() {
         }, 1500)
 
       } else {
-        // Sign up flow via our secure auto-confirm API endpoint
-        const res = await fetch('/api/signup', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ email, password, fullName })
-        })
+        // Sign up flow via our secure auto-confirm API endpoint with automatic client-side fallback
+        let signUpSuccess = false
+        try {
+          const res = await fetch('/api/signup', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email, password, fullName })
+          })
 
-        const resData = await res.json()
-        if (!res.ok) {
-          throw new Error(resData.error || 'Регистрация учурунда ката кетти. / Ошибка регистрации.')
+          const resData = await res.json()
+          if (res.ok) {
+            signUpSuccess = true
+          } else {
+            console.warn('API Signup failed, falling back to client-side signup:', resData.error)
+          }
+        } catch (e) {
+          console.warn('API Signup request failed, falling back to client-side signup:', e)
+        }
+
+        if (!signUpSuccess) {
+          const { error: signUpError } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              data: {
+                full_name: fullName,
+              },
+            },
+          })
+          if (signUpError) throw signUpError
         }
 
         setSuccessMsg(d.signUpSuccess)
