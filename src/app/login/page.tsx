@@ -73,17 +73,19 @@ export default function LoginPage() {
         }, 1500)
 
       } else {
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              full_name: fullName,
-            },
+        // Sign up flow via our secure auto-confirm API endpoint
+        const res = await fetch('/api/signup', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
           },
+          body: JSON.stringify({ email, password, fullName })
         })
 
-        if (signUpError) throw signUpError
+        const resData = await res.json()
+        if (!res.ok) {
+          throw new Error(resData.error || 'Регистрация учурунда ката кетти. / Ошибка регистрации.')
+        }
 
         setSuccessMsg(d.signUpSuccess)
 
