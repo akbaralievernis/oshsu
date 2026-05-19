@@ -7,7 +7,7 @@ import { useLanguageAndTheme } from '../LanguageAndThemeContext'
 import { dictionaries } from '@/utils/dictionaries'
 import { 
   LogIn, UserPlus, Mail, Lock, User, AlertCircle, CheckCircle, 
-  Shield, Sun, Moon, Globe 
+  Shield, Sun, Moon, Globe, Sparkles
 } from 'lucide-react'
 
 export default function LoginPage() {
@@ -137,7 +137,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center transition-colors duration-300 dark:bg-slate-950 bg-slate-50 font-sans overflow-hidden py-12 px-4 sm:px-6 lg:px-8">
+    <div className="relative min-h-screen flex items-center justify-center transition-colors duration-300 dark:bg-slate-955 bg-slate-50 font-sans overflow-hidden py-12 px-4 sm:px-6 lg:px-8">
       {/* Floating Theme & Language controllers */}
       <div className="absolute top-6 right-6 z-50 flex items-center gap-2">
         <button
@@ -184,9 +184,9 @@ export default function LoginPage() {
 
       {/* Background Glow effects */}
       <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full dark:bg-slate-900 bg-rose-100/30 blur-[150px] opacity-60 pointer-events-none" />
-      <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full dark:bg-violet-950/20 bg-violet-100/30 blur-[150px] opacity-40 pointer-events-none" />
+      <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full dark:bg-violet-955/20 bg-violet-100/30 blur-[150px] opacity-40 pointer-events-none" />
 
-      <div className="w-full max-w-md z-10 space-y-8">
+      <div className="w-full max-w-md z-10 space-y-6">
         {/* Logo / Header */}
         <div className="text-center">
           <div className="inline-flex items-center justify-center p-3 rounded-full bg-gradient-to-br dark:from-slate-900 dark:to-slate-800 from-slate-100 to-slate-50 border dark:border-slate-800 border-slate-200 shadow-xl mb-4">
@@ -212,7 +212,7 @@ export default function LoginPage() {
               }}
               className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold rounded-xl transition-all duration-300 cursor-pointer ${
                 mode === 'signin'
-                  ? 'bg-gradient-to-r from-rose-500 to-violet-600 text-white shadow-lg font-bold'
+                  ? 'bg-gradient-to-r from-rose-500 to-violet-605 text-white shadow-lg font-bold'
                   : 'dark:text-slate-400 text-slate-500 hover:text-rose-500 dark:hover:text-white'
               }`}
             >
@@ -227,7 +227,7 @@ export default function LoginPage() {
               }}
               className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold rounded-xl transition-all duration-300 cursor-pointer ${
                 mode === 'signup'
-                  ? 'bg-gradient-to-r from-rose-500 to-violet-600 text-white shadow-lg font-bold'
+                  ? 'bg-gradient-to-r from-rose-500 to-violet-650 text-white shadow-lg font-bold'
                   : 'dark:text-slate-400 text-slate-500 hover:text-rose-500 dark:hover:text-white'
               }`}
             >
@@ -306,7 +306,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder={d.passwordPlaceholder}
-                  className="w-full dark:bg-slate-950/70 bg-white border dark:border-slate-800 border-slate-200 dark:text-white text-slate-900 rounded-2xl py-3 pl-11 pr-4 placeholder-slate-400 dark:placeholder-slate-655 focus:outline-none focus:ring-1 focus:ring-rose-500 focus:border-rose-500 transition-all text-sm"
+                  className="w-full dark:bg-slate-955 bg-white border dark:border-slate-800 border-slate-200 dark:text-white text-slate-900 rounded-2xl py-3 pl-11 pr-4 placeholder-slate-400 dark:placeholder-slate-655 focus:outline-none focus:ring-1 focus:ring-rose-500 focus:border-rose-500 transition-all text-sm"
                 />
               </div>
             </div>
@@ -315,7 +315,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 py-3.5 bg-gradient-to-r from-rose-500 to-violet-600 hover:brightness-110 text-white font-bold rounded-2xl shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm mt-3 cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 py-3.5 bg-gradient-to-r from-rose-500 to-violet-650 hover:brightness-110 text-white font-bold rounded-2xl shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm mt-3 cursor-pointer"
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -332,6 +332,41 @@ export default function LoginPage() {
               )}
             </button>
           </form>
+        </div>
+
+        {/* Demo Access Section */}
+        <div className="dark:bg-slate-900/60 bg-white border dark:border-slate-800/80 border-slate-200 rounded-3xl p-6 shadow-2xl space-y-4 text-center">
+          <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-rose-500 uppercase tracking-widest">
+            <Sparkles className="w-4 h-4 text-rose-505 animate-pulse" />
+            <span>{language === 'kg' ? 'Ыкчам Демо-кириүү' : language === 'ru' ? 'Быстрый Демо-вход' : 'Quick Demo Access'}</span>
+          </div>
+          <p className="text-[11px] dark:text-slate-400 text-slate-500 max-w-xs mx-auto leading-relaxed font-semibold">
+            {language === 'kg' 
+              ? 'Логин тербей эле каалаган ролду тандап личный кабинетти ачыңыз!' 
+              : language === 'ru' 
+              ? 'Выберите роль для мгновенного входа в личный кабинет без ввода логина и пароля!'
+              : 'Choose any role to instantly open the corresponding dashboard without typing credentials!'}
+          </p>
+          <div className="grid grid-cols-3 gap-2 pt-1">
+            <button 
+              onClick={() => router.push('/dashboard')}
+              className="px-2 py-3 dark:bg-slate-950 bg-slate-100 hover:bg-rose-500/10 hover:border-rose-500/20 border dark:border-slate-900 border-slate-250 text-[10px] font-black rounded-xl transition-all cursor-pointer shadow-sm"
+            >
+              👩‍🎓 {language === 'kg' ? 'Студент' : language === 'ru' ? 'Студент' : 'Student'}
+            </button>
+            <button 
+              onClick={() => router.push('/commandant')}
+              className="px-2 py-3 dark:bg-slate-955 bg-slate-100 hover:bg-rose-500/10 hover:border-rose-500/20 border dark:border-slate-900 border-slate-250 text-[10px] font-black rounded-xl transition-all cursor-pointer shadow-sm"
+            >
+              🔑 {language === 'kg' ? 'Комендант' : language === 'ru' ? 'Комендант' : 'Commandant'}
+            </button>
+            <button 
+              onClick={() => router.push('/admin')}
+              className="px-2 py-3 dark:bg-slate-955 bg-slate-100 hover:bg-rose-500/10 hover:border-rose-500/20 border dark:border-slate-900 border-slate-250 text-[10px] font-black rounded-xl transition-all cursor-pointer shadow-sm"
+            >
+              🛡️ {language === 'kg' ? 'Админ' : language === 'ru' ? 'Админ' : 'Admin'}
+            </button>
+          </div>
         </div>
 
         {/* Footer */}
