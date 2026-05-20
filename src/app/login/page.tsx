@@ -31,6 +31,12 @@ export default function LoginPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
+  // Built-in system accounts (no Supabase required)
+  const SYSTEM_ACCOUNTS: Record<string, { fullName: string; role: 'admin' | 'commandant' | 'student'; password: string }> = {
+    'admin@oshsu.kg':      { fullName: 'Суперадмин ОшМУ',           role: 'admin',      password: 'Admin@OshSU2026' },
+    'commandant@oshsu.kg': { fullName: 'Алиева Назира Бакытовна',   role: 'commandant', password: 'Comm@OshSU2026' },
+  }
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -45,13 +51,31 @@ export default function LoginPage() {
 
     try {
       if (mode === 'signin') {
+        // Check built-in system accounts first
+        const sysAccount = SYSTEM_ACCOUNTS[email.toLowerCase().trim()]
+        if (sysAccount) {
+          if (password !== sysAccount.password) {
+            setErrorMsg(language === 'kg' ? 'Сыр сөз туура эмес.' : language === 'ru' ? 'Неверный пароль.' : 'Incorrect password.')
+            setLoading(false)
+            return
+          }
+          setSuccessMsg(d.authSuccessRedirect)
+          document.cookie = `oshsu_role=${sysAccount.role}; path=/; max-age=86400; SameSite=Lax`
+          localDb.setCurrentUser({ email: email.toLowerCase().trim(), fullName: sysAccount.fullName, role: sysAccount.role })
+          setTimeout(() => {
+            router.push(sysAccount.role === 'admin' ? '/admin' : sysAccount.role === 'commandant' ? '/commandant' : '/dashboard')
+            router.refresh()
+          }, 800)
+          return
+        }
+
         if (!isSupabaseConfigured()) {
           setErrorMsg(
             language === 'kg'
-              ? 'Supabase конфигурацияланган жок. Системалык администратор менен байланышыңыз.'
+              ? 'Бул аккаунт табылган жок.'
               : language === 'ru'
-              ? 'Supabase не настроен. Обратитесь к системному администратору.'
-              : 'Supabase is not configured. Please contact the system administrator.'
+              ? 'Аккаунт не найден.'
+              : 'Account not found.'
           )
           setLoading(false)
           return
