@@ -37,6 +37,25 @@ export interface RoomBooking {
   status: 'pending' | 'approved'
 }
 
+export interface DormitoryRecord {
+  id: string
+  name: string
+  address: string
+  tag: string
+  description: string
+  commandantName: string
+  commandantPhone: string
+  rooms: number
+  beds: number
+  occupied: number
+  floors: number
+  yearBuilt: string
+  status: string
+  amenities: string[]
+  photos: string[]
+  videoUrl: string
+}
+
 export interface CommandantAccount {
   id: string
   fullName: string
@@ -471,6 +490,18 @@ const initializeLocalStorage = () => {
   }
 }
 
+function getInitialDormitories(): DormitoryRecord[] {
+  return [
+    { id: '1', name: 'Общежитие №1 (Главный корпус)', address: 'г. Ош, ул. Ленина, 331', tag: 'Главный корпус', description: 'Самое историческое общежитие ОшГУ. Здание полностью реконструировано, оборудовано читальным залом и современной библиотекой. Расположено в шаговой доступности от главных учебных корпусов.', commandantName: 'Алиева Назира Бакытовна', commandantPhone: '+996 (555) 11-22-33', rooms: 120, beds: 450, occupied: 412, floors: 4, yearBuilt: '1978 (Реконструкция: 2023)', status: 'Активдүү', amenities: ['Быстрый Wi-Fi', 'Отопление', 'Прачечная', 'Читальный зал', 'Спортплощадка', 'Камеры безопасности'], photos: [], videoUrl: '' },
+    { id: '2', name: 'Общежитие №2 (Международное)', address: 'г. Ош, ул. Исанова, 73', tag: 'Международное', description: 'Эпицентр международной студенческой жизни. В здании работает англоязычный персонал, установлены самые строгие стандарты безопасности, работает интернациональная столовая.', commandantName: 'Осмонов Бакытбек Садыкович', commandantPhone: '+996 (777) 44-55-66', rooms: 150, beds: 600, occupied: 580, floors: 5, yearBuilt: '2015', status: 'Активдүү', amenities: ['Интернациональная кухня', 'Спортзал', 'Зона отдыха', 'Кабельное ТВ', 'Лифт', 'Охрана 24/7'], photos: [], videoUrl: '' },
+    { id: '3', name: 'Общежитие №3 (Новый городок)', address: 'г. Ош, ул. Г. Айтиева, 12', tag: 'Новый городок', description: 'Одно из самых современных и недавно построенных общежитий ОшГУ. Здесь организована просторная зона коворкинга, парковая зона для прогулок и экологический сад.', commandantName: 'Рахманова Динара Асановна', commandantPhone: '+996 (500) 77-88-99', rooms: 200, beds: 800, occupied: 610, floors: 6, yearBuilt: '2021', status: 'Толуп калды', amenities: ['Коворкинг-центр', 'Парковая зона', 'Эко-сад', 'Быстрый Wi-Fi', 'Лифт', 'Велопарковка'], photos: [], videoUrl: '' },
+    { id: '4', name: 'Общежитие №4 (Медицинское)', address: 'г. Ош, ул. Курманжан Датки, 204', tag: 'Медицинское', description: 'Специальный кампус для студентов медицинского факультета. Расположен в непосредственной близости от учебных лабораторий и клиник университета.', commandantName: 'Маматова Гүлнура Садыковна', commandantPhone: '+996 (702) 22-33-44', rooms: 130, beds: 500, occupied: 420, floors: 5, yearBuilt: '1985 (Реконструкция: 2022)', status: 'Активдүү', amenities: ['Медпункт', 'Читальный зал', 'Быстрый Wi-Fi', 'Прачечная', 'Спортплощадка', 'Охрана 24/7'], photos: [], videoUrl: '' },
+    { id: '5', name: 'Общежитие №5 (Педагогическое)', address: 'г. Ош, ул. Г. Айтиева, 8', tag: 'Педагогическое', description: 'Уютное общежитие, где в основном проживают будущие педагоги. Созданы прекрасные условия для творческих мероприятий и подготовки к занятиям.', commandantName: 'Садыкова Назира Токтогуловна', commandantPhone: '+996 (550) 88-99-00', rooms: 90, beds: 350, occupied: 310, floors: 4, yearBuilt: '1990', status: 'Активдүү', amenities: ['Музыкальная комната', 'Библиотека', 'Столовая', 'Быстрый Wi-Fi', 'Прачечная', 'Камеры наблюдения'], photos: [], videoUrl: '' },
+    { id: '6', name: 'Общежитие №6 (Техническое)', address: 'г. Ош, ул. Ленина, 287', tag: 'Техническое', description: 'Современное цифровое общежитие для студентов ИТ и инженерных специальностей, оборудованное зонами коворкинга и мини-лабораториями.', commandantName: 'Абдыкадыров Нурлан Токтосунович', commandantPhone: '+996 (709) 55-66-77', rooms: 100, beds: 400, occupied: 360, floors: 5, yearBuilt: '2018', status: 'Активдүү', amenities: ['IT Коворкинг', 'Зона 3D-печати', 'Быстрый Wi-Fi', 'Спортзал', 'Зона отдыха', 'Охрана 24/7'], photos: [], videoUrl: '' },
+    { id: '7', name: 'Общежитие №7 (Спортивное)', address: 'г. Ош, ул. Исанова, 89', tag: 'Спортивное', description: 'Современное спортивное общежитие для студентов факультета физической культуры и спорта со встроенным кроссфит-залом и открытым стадионом.', commandantName: 'Асанов Руслан Кубанычбекович', commandantPhone: '+996 (770) 99-88-77', rooms: 80, beds: 300, occupied: 250, floors: 4, yearBuilt: '2020', status: 'Активдүү', amenities: ['Кроссфит-зал', 'Открытый стадион', 'Быстрый Wi-Fi', 'Прачечная', 'Эко-буфет', 'Отопление'], photos: [], videoUrl: '' },
+  ]
+}
+
 // Check on import
 if (typeof window !== 'undefined') {
   initializeLocalStorage()
@@ -538,6 +569,43 @@ export const localDb = {
     bookings.unshift(newBooking)
     localStorage.setItem('oshsu_bookings', JSON.stringify(bookings))
     return newBooking
+  },
+
+  // Dormitories
+  getDormitories(): DormitoryRecord[] {
+    if (typeof window === 'undefined') return getInitialDormitories()
+    const raw = localStorage.getItem('oshsu_dormitories')
+    if (!raw) {
+      const initial = getInitialDormitories()
+      localStorage.setItem('oshsu_dormitories', JSON.stringify(initial))
+      return initial
+    }
+    return JSON.parse(raw)
+  },
+
+  getDormitory(id: string): DormitoryRecord | null {
+    return this.getDormitories().find(d => d.id === id) || null
+  },
+
+  saveDormitories(dorms: DormitoryRecord[]) {
+    if (typeof window === 'undefined') return
+    localStorage.setItem('oshsu_dormitories', JSON.stringify(dorms))
+  },
+
+  addDormitory(data: Omit<DormitoryRecord, 'id'>): DormitoryRecord {
+    const dorms = this.getDormitories()
+    const entry: DormitoryRecord = { ...data, id: 'dorm_' + Math.random().toString(36).substr(2, 9) }
+    dorms.push(entry)
+    this.saveDormitories(dorms)
+    return entry
+  },
+
+  updateDormitory(id: string, updates: Partial<DormitoryRecord>) {
+    this.saveDormitories(this.getDormitories().map(d => d.id === id ? { ...d, ...updates } : d))
+  },
+
+  removeDormitory(id: string) {
+    this.saveDormitories(this.getDormitories().filter(d => d.id !== id))
   },
 
   // Commandants

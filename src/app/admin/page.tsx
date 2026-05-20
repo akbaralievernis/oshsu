@@ -9,9 +9,9 @@ import {
   Shield, Users, Landmark, FileText, CheckCircle, XCircle, Clock,
   Plus, Settings, LogOut, ChevronRight, Search, Filter, RefreshCw, BarChart3,
   Menu, X, Sun, Moon, Globe, Bell, Printer, CreditCard, ClipboardList,
-  Trash2, Pencil, Eye, EyeOff, UserPlus
+  Trash2, Pencil, Eye, EyeOff, UserPlus, ImagePlus, Video, Link2, Tag
 } from 'lucide-react'
-import { localDb, type CommandantAccount } from '@/utils/localDb'
+import { localDb, type CommandantAccount, type DormitoryRecord } from '@/utils/localDb'
 
 export default function AdminDashboard() {
   const router = useRouter()
@@ -55,18 +55,21 @@ export default function AdminDashboard() {
   const emptyCommForm = { fullName: '', email: '', password: '', dormId: '', dormName: '', phone: '' }
   const [commForm, setCommForm] = useState(emptyCommForm)
 
-  // Static base occupancy values (used to prevent double-counting on re-renders)
-  const BASE_DORMITORIES = [
-    { id: '1', name: '№1 Жатакана (Башкы корпус)', address: 'Ленин көчөсү, 331', rooms: 120, beds: 450, occupied: 412, status: 'Активдүү' },
-    { id: '2', name: '№2 Жатакана (Эл аралык)', address: 'Исанов көчөсү, 73', rooms: 150, beds: 600, occupied: 580, status: 'Активдүү' },
-    { id: '3', name: '№3 Жатакана (Жаңы конуш)', address: 'Г. Айтиев көчөсү, 12', rooms: 200, beds: 800, occupied: 610, status: 'Толуп калды' },
-    { id: '4', name: '№4 Жатакана (Медициналык)', address: 'Курманжан Датка көчөсү, 204', rooms: 130, beds: 500, occupied: 420, status: 'Активдүү' },
-    { id: '5', name: '№5 Жатакана (Педагогикалык)', address: 'Г. Айтиев көчөсү, 8', rooms: 90, beds: 350, occupied: 310, status: 'Активдүү' },
-    { id: '6', name: '№6 Жатакана (Техникалык)', address: 'Ленин көчөсү, 287', rooms: 100, beds: 400, occupied: 360, status: 'Активдүү' },
-    { id: '7', name: '№7 Жатакана (Спортук)', address: 'Исанов көчөсү, 89', rooms: 80, beds: 300, occupied: 250, status: 'Активдүү' },
-  ]
+  // Dormitory management
+  const [dormitories, setDormitories] = useState<DormitoryRecord[]>([])
+  const [showDormModal, setShowDormModal] = useState(false)
+  const [editingDorm, setEditingDorm] = useState<DormitoryRecord | null>(null)
+  const [deleteDormConfirmId, setDeleteDormConfirmId] = useState<string | null>(null)
+  const [dormModalTab, setDormModalTab] = useState<'basic' | 'staff' | 'media' | 'amenities'>('basic')
+  const emptyDormForm: Omit<DormitoryRecord, 'id'> = {
+    name: '', address: '', tag: '', description: '', commandantName: '', commandantPhone: '',
+    rooms: 0, beds: 0, occupied: 0, floors: 0, yearBuilt: '', status: 'Активдүү',
+    amenities: [], photos: [], videoUrl: ''
+  }
+  const [dormForm, setDormForm] = useState<Omit<DormitoryRecord, 'id'>>(emptyDormForm)
+  const [newAmenity, setNewAmenity] = useState('')
+  const [newPhoto, setNewPhoto] = useState('')
 
-  const [dormitories, setDormitories] = useState(BASE_DORMITORIES)
 
   // Check auth & role
   useEffect(() => {
@@ -85,32 +88,20 @@ export default function AdminDashboard() {
     setApplications(localDb.getApplications())
     setBookings(localDb.getBookings())
     setCommandants(localDb.getCommandants())
+    setDormitories(localDb.getDormitories())
   }, [])
 
-  // Sync statistics and occupancy dynamically
+  // Sync statistics dynamically
   useEffect(() => {
     const allApps = localDb.getApplications()
     const allBookings = localDb.getBookings()
-    
-    // Update dormitories occupancy dynamically based on bookings (uses static base values to prevent double-counting)
-    setDormitories(
-      BASE_DORMITORIES.map(dorm => {
-        const bookingsCount = allBookings.filter(b => b.dormId === dorm.id).length
-        const totalOccupied = dorm.occupied + bookingsCount
-        return {
-          ...dorm,
-          occupied: totalOccupied > dorm.beds ? dorm.beds : totalOccupied
-        }
-      })
-    )
-
     setStats({
       totalStudents: 1420 + allBookings.length,
-      totalDorms: 7,
+      totalDorms: dormitories.length,
       pendingApps: allApps.filter(a => a.status === 'pending').length,
       activeTickets: 5
     })
-  }, [applications, bookings])
+  }, [applications, bookings, dormitories])
 
   const handleLogout = () => {
     document.cookie = "oshsu_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;"
@@ -154,6 +145,41 @@ export default function AdminDashboard() {
     localDb.removeCommandant(id)
     setCommandants(localDb.getCommandants())
     setDeleteConfirmId(null)
+  }
+
+  const openAddDorm = () => {
+    setEditingDorm(null)
+    setDormForm(emptyDormForm)
+    setDormModalTab('basic')
+    setNewAmenity('')
+    setNewPhoto('')
+    setShowDormModal(true)
+  }
+
+  const openEditDorm = (dorm: DormitoryRecord) => {
+    setEditingDorm(dorm)
+    setDormForm({ name: dorm.name, address: dorm.address, tag: dorm.tag, description: dorm.description, commandantName: dorm.commandantName, commandantPhone: dorm.commandantPhone, rooms: dorm.rooms, beds: dorm.beds, occupied: dorm.occupied, floors: dorm.floors, yearBuilt: dorm.yearBuilt, status: dorm.status, amenities: [...dorm.amenities], photos: [...dorm.photos], videoUrl: dorm.videoUrl })
+    setDormModalTab('basic')
+    setNewAmenity('')
+    setNewPhoto('')
+    setShowDormModal(true)
+  }
+
+  const handleSaveDorm = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (editingDorm) {
+      localDb.updateDormitory(editingDorm.id, dormForm)
+    } else {
+      localDb.addDormitory(dormForm)
+    }
+    setDormitories(localDb.getDormitories())
+    setShowDormModal(false)
+  }
+
+  const removeDorm = (id: string) => {
+    localDb.removeDormitory(id)
+    setDormitories(localDb.getDormitories())
+    setDeleteDormConfirmId(null)
   }
 
   return (
@@ -568,7 +594,10 @@ export default function AdminDashboard() {
                     <Plus className="w-5 h-5 shrink-0" />
                     {d.btnAddDorm}
                   </button>
-                  <button className="w-full flex items-center justify-center gap-2.5 py-3.5 dark:bg-slate-950 bg-slate-100 hover:bg-slate-200 dark:hover:bg-slate-900 border dark:border-slate-800 border-slate-250 dark:text-slate-305 text-slate-700 font-semibold rounded-2xl transition-all duration-300 cursor-pointer">
+                  <button
+                    onClick={() => setActiveTab('users')}
+                    className="w-full flex items-center justify-center gap-2.5 py-3.5 dark:bg-slate-950 bg-slate-100 hover:bg-slate-200 dark:hover:bg-slate-900 border dark:border-slate-800 border-slate-250 dark:text-slate-305 text-slate-700 font-semibold rounded-2xl transition-all duration-300 cursor-pointer"
+                  >
                     <Users className="w-5 h-5 shrink-0" />
                     {d.btnAssignComm}
                   </button>
@@ -670,44 +699,107 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* Tab 3: Dormitories */}
+        {/* Tab 3: Dormitories Management */}
         {activeTab === 'dormitories' && (
           <div className="space-y-6 animate-fadeIn">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <h3 className="text-xl font-bold">{d.dormListTitle}</h3>
-              <button className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-rose-500 to-violet-605 hover:brightness-110 text-white font-bold rounded-xl shadow-lg transition-all duration-300 cursor-pointer">
+              <div>
+                <h3 className="text-xl font-bold">{d.dormListTitle}</h3>
+                <p className="text-xs text-slate-500 mt-1">{language === 'kg' ? 'Жатаканаларды кошуу, өзгөртүү, сүрөт жана видео башкаруу' : language === 'ru' ? 'Добавляйте, редактируйте общежития, управляйте фото и видео' : 'Add, edit dormitories, manage photos and videos'}</p>
+              </div>
+              <button
+                onClick={openAddDorm}
+                className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-rose-500 to-violet-605 hover:brightness-110 text-white font-bold rounded-xl shadow-lg transition-all duration-300 cursor-pointer"
+              >
                 <Plus className="w-4 h-4" />
                 {d.btnAddDorm}
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {dormitories.map(dorm => {
-                const percentage = Math.round((dorm.occupied / dorm.beds) * 100)
+                const percentage = Math.min(100, Math.round((dorm.occupied / (dorm.beds || 1)) * 100))
+                const hasPhotos = dorm.photos && dorm.photos.length > 0
                 return (
-                  <div key={dorm.id} className="p-6 rounded-3xl dark:bg-slate-900/30 bg-white border dark:border-slate-900 border-slate-200 shadow-sm flex flex-col justify-between space-y-6">
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className={`px-2.5 py-1 text-2xs font-extrabold rounded-full ${dorm.status === 'Активдүү' ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-450' : 'bg-rose-500/10 border border-rose-500/20 text-rose-500'}`}>
+                  <div key={dorm.id} className="rounded-3xl dark:bg-slate-900/30 bg-white border dark:border-slate-900 border-slate-200 shadow-sm overflow-hidden flex flex-col">
+                    {/* Photo or placeholder */}
+                    <div className="relative h-36 dark:bg-slate-950 bg-slate-100 overflow-hidden">
+                      {hasPhotos ? (
+                        <img src={dorm.photos[0]} alt={dorm.name} className="w-full h-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center flex-col gap-2 opacity-30">
+                          <ImagePlus className="w-8 h-8" />
+                          <span className="text-xs font-semibold">{language === 'ru' ? 'Фото не добавлено' : 'No photos'}</span>
+                        </div>
+                      )}
+                      <div className="absolute top-3 left-3 flex items-center gap-2">
+                        <span className={`px-2.5 py-1 text-2xs font-extrabold rounded-full backdrop-blur-sm ${dorm.status === 'Активдүү' ? 'bg-emerald-500/80 text-white' : dorm.status === 'Толуп калды' ? 'bg-amber-500/80 text-white' : 'bg-rose-500/80 text-white'}`}>
                           {dorm.status}
                         </span>
-                        <span className="text-xs text-slate-500 font-semibold">{dorm.rooms} {language === 'kg' ? 'бөлмө' : 'комнат'}</span>
+                        {dorm.videoUrl && (
+                          <span className="px-2 py-1 text-2xs font-bold rounded-full bg-violet-500/80 text-white backdrop-blur-sm flex items-center gap-1">
+                            <Video className="w-3 h-3" /> Video
+                          </span>
+                        )}
                       </div>
-                      
-                      <h4 className="text-lg font-bold">{dorm.name}</h4>
-                      <p className="text-xs text-slate-500">{dorm.address}</p>
+                      <div className="absolute top-3 right-3 flex gap-1.5">
+                        <button
+                          onClick={() => openEditDorm(dorm)}
+                          className="p-1.5 rounded-lg bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border border-slate-200/50 text-slate-700 dark:text-white hover:bg-white transition-all cursor-pointer shadow-sm"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        {deleteDormConfirmId === dorm.id ? (
+                          <div className="flex gap-1">
+                            <button onClick={() => removeDorm(dorm.id)} className="px-2 py-1 text-2xs bg-rose-500 text-white rounded-lg font-bold cursor-pointer">
+                              {language === 'ru' ? 'Удалить' : 'Del'}
+                            </button>
+                            <button onClick={() => setDeleteDormConfirmId(null)} className="px-2 py-1 text-2xs bg-white/80 dark:bg-slate-800 rounded-lg font-bold cursor-pointer">
+                              {language === 'ru' ? 'Нет' : 'No'}
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setDeleteDormConfirmId(dorm.id)}
+                            className="p-1.5 rounded-lg bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border border-slate-200/50 text-rose-500 hover:bg-white transition-all cursor-pointer shadow-sm"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-xs font-semibold">
-                        <span className="text-slate-500">{language === 'kg' ? 'Орундар' : 'Места'}</span>
-                        <span>{dorm.occupied}/{dorm.beds} ({percentage}%)</span>
+                    <div className="p-5 flex flex-col gap-3 flex-1">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-2xs font-bold text-rose-500 uppercase tracking-wider">{dorm.tag}</span>
+                          <span className="text-2xs text-slate-500">· {dorm.rooms} {language === 'kg' ? 'бөлмө' : 'комнат'}</span>
+                        </div>
+                        <h4 className="font-bold text-sm leading-tight">{dorm.name}</h4>
+                        <p className="text-2xs text-slate-500 mt-0.5">{dorm.address}</p>
                       </div>
-                      <div className="h-2 w-full dark:bg-slate-950 bg-slate-100 rounded-full overflow-hidden border dark:border-slate-900 border-slate-200">
-                        <div 
-                          className="h-full bg-gradient-to-r from-rose-500 to-violet-605 rounded-full" 
-                          style={{ width: `${percentage}%` }}
-                        />
+
+                      {dorm.commandantName && (
+                        <p className="text-2xs text-slate-500 font-semibold">{language === 'ru' ? 'Комендант:' : 'Комендант:'} <span className="dark:text-slate-300 text-slate-700">{dorm.commandantName}</span></p>
+                      )}
+
+                      {hasPhotos && (
+                        <div className="flex gap-1">
+                          {dorm.photos.slice(0, 4).map((url, i) => (
+                            <img key={i} src={url} className="w-8 h-8 rounded-lg object-cover border dark:border-slate-800 border-slate-200" onError={e => { (e.target as HTMLImageElement).style.opacity = '0' }} alt="" />
+                          ))}
+                          {dorm.photos.length > 4 && <div className="w-8 h-8 rounded-lg dark:bg-slate-800 bg-slate-100 flex items-center justify-center text-2xs font-bold text-slate-500">+{dorm.photos.length - 4}</div>}
+                        </div>
+                      )}
+
+                      <div className="mt-auto space-y-1.5">
+                        <div className="flex justify-between text-2xs font-semibold">
+                          <span className="text-slate-500">{language === 'kg' ? 'Орундар' : 'Места'}</span>
+                          <span>{dorm.occupied}/{dorm.beds} <span className="text-rose-500">({percentage}%)</span></span>
+                        </div>
+                        <div className="h-1.5 w-full dark:bg-slate-950 bg-slate-100 rounded-full overflow-hidden">
+                          <div className="h-full bg-gradient-to-r from-rose-500 to-violet-605 rounded-full transition-all" style={{ width: `${percentage}%` }} />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -909,6 +1001,230 @@ export default function AdminDashboard() {
         )}
       </main>
 
+      {/* Dormitory Add / Edit Modal */}
+      {showDormModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm animate-fadeIn p-4">
+          <div className="w-full max-w-2xl dark:bg-slate-900 bg-white rounded-3xl border dark:border-slate-800 border-slate-200 shadow-2xl flex flex-col max-h-[90vh]">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-8 py-5 border-b dark:border-slate-800 border-slate-200">
+              <h3 className="text-xl font-bold">
+                {editingDorm ? (language === 'ru' ? 'Редактировать общежитие' : 'Жатакананы өзгөртүү') : (language === 'ru' ? 'Новое общежитие' : 'Жаңы жатакана')}
+              </h3>
+              <button onClick={() => setShowDormModal(false)} className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Tabs */}
+            <div className="flex px-8 pt-4 gap-1 border-b dark:border-slate-800 border-slate-200 shrink-0">
+              {(['basic', 'staff', 'amenities', 'media'] as const).map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setDormModalTab(tab)}
+                  className={`px-4 py-2 text-xs font-bold rounded-t-xl transition-all cursor-pointer border-b-2 -mb-px ${dormModalTab === tab ? 'border-rose-500 text-rose-500 dark:bg-slate-800/50 bg-rose-500/5' : 'border-transparent text-slate-500 hover:text-rose-500'}`}
+                >
+                  {tab === 'basic' ? (language === 'ru' ? 'Основное' : 'Негизги') :
+                   tab === 'staff' ? (language === 'ru' ? 'Персонал' : 'Кызматкерлер') :
+                   tab === 'amenities' ? (language === 'ru' ? 'Удобства' : 'Шарттар') :
+                   (language === 'ru' ? 'Фото & Видео' : 'Фото & Видео')}
+                </button>
+              ))}
+            </div>
+
+            {/* Modal Body */}
+            <form onSubmit={handleSaveDorm} className="flex flex-col flex-1 overflow-hidden">
+              <div className="overflow-y-auto flex-1 px-8 py-6 space-y-5">
+
+                {/* Tab: Basic */}
+                {dormModalTab === 'basic' && (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="col-span-2 space-y-1.5">
+                        <label className="text-xs font-semibold dark:text-slate-400 text-slate-500 uppercase tracking-wider">{language === 'ru' ? 'Название' : 'Аты'} *</label>
+                        <input required value={dormForm.name} onChange={e => setDormForm(p => ({ ...p, name: e.target.value }))} placeholder={language === 'ru' ? 'Общежитие №1 (Главный корпус)' : '№1 Жатакана (Башкы корпус)'} className="w-full dark:bg-slate-950/70 bg-slate-50 border dark:border-slate-800 border-slate-200 dark:text-white text-slate-900 rounded-2xl py-3 px-4 text-sm focus:outline-none focus:ring-1 focus:ring-rose-500 transition-all" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-semibold dark:text-slate-400 text-slate-500 uppercase tracking-wider">{language === 'ru' ? 'Тип / Тег' : 'Тип / Тег'}</label>
+                        <input value={dormForm.tag} onChange={e => setDormForm(p => ({ ...p, tag: e.target.value }))} placeholder={language === 'ru' ? 'Главный корпус' : 'Башкы корпус'} className="w-full dark:bg-slate-950/70 bg-slate-50 border dark:border-slate-800 border-slate-200 dark:text-white text-slate-900 rounded-2xl py-3 px-4 text-sm focus:outline-none focus:ring-1 focus:ring-rose-500 transition-all" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-semibold dark:text-slate-400 text-slate-500 uppercase tracking-wider">{language === 'ru' ? 'Статус' : 'Статус'}</label>
+                        <select value={dormForm.status} onChange={e => setDormForm(p => ({ ...p, status: e.target.value }))} className="w-full dark:bg-slate-950/70 bg-slate-50 border dark:border-slate-800 border-slate-200 dark:text-white text-slate-900 rounded-2xl py-3 px-4 text-sm focus:outline-none focus:ring-1 focus:ring-rose-500 transition-all cursor-pointer">
+                          <option value="Активдүү">Активдүү</option>
+                          <option value="Толуп калды">Толуп калды</option>
+                          <option value="Жабык">Жабык</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold dark:text-slate-400 text-slate-500 uppercase tracking-wider">{language === 'ru' ? 'Адрес' : 'Дарек'}</label>
+                      <input value={dormForm.address} onChange={e => setDormForm(p => ({ ...p, address: e.target.value }))} placeholder={language === 'ru' ? 'г. Ош, ул. Ленина, 331' : 'Ош шаары, Ленин көчөсү, 331'} className="w-full dark:bg-slate-950/70 bg-slate-50 border dark:border-slate-800 border-slate-200 dark:text-white text-slate-900 rounded-2xl py-3 px-4 text-sm focus:outline-none focus:ring-1 focus:ring-rose-500 transition-all" />
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                      {([['rooms', language === 'ru' ? 'Комнат' : 'Бөлмө'], ['beds', language === 'ru' ? 'Мест' : 'Орун'], ['floors', language === 'ru' ? 'Этажей' : 'Кабат'], ['occupied', language === 'ru' ? 'Заселено' : 'Толгон']] as [keyof Omit<DormitoryRecord,'id'>, string][]).map(([field, label]) => (
+                        <div key={field} className="space-y-1.5">
+                          <label className="text-xs font-semibold dark:text-slate-400 text-slate-500 uppercase tracking-wider">{label}</label>
+                          <input type="number" min={0} value={(dormForm as any)[field]} onChange={e => setDormForm(p => ({ ...p, [field]: parseInt(e.target.value) || 0 }))} className="w-full dark:bg-slate-950/70 bg-slate-50 border dark:border-slate-800 border-slate-200 dark:text-white text-slate-900 rounded-2xl py-3 px-4 text-sm focus:outline-none focus:ring-1 focus:ring-rose-500 transition-all" />
+                        </div>
+                      ))}
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold dark:text-slate-400 text-slate-500 uppercase tracking-wider">{language === 'ru' ? 'Год постройки' : 'Курулган жыл'}</label>
+                      <input value={dormForm.yearBuilt} onChange={e => setDormForm(p => ({ ...p, yearBuilt: e.target.value }))} placeholder="2023" className="w-full dark:bg-slate-950/70 bg-slate-50 border dark:border-slate-800 border-slate-200 dark:text-white text-slate-900 rounded-2xl py-3 px-4 text-sm focus:outline-none focus:ring-1 focus:ring-rose-500 transition-all" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold dark:text-slate-400 text-slate-500 uppercase tracking-wider">{language === 'ru' ? 'Описание' : 'Сүрөттөмө'}</label>
+                      <textarea rows={3} value={dormForm.description} onChange={e => setDormForm(p => ({ ...p, description: e.target.value }))} placeholder={language === 'ru' ? 'Краткое описание общежития...' : 'Жатакана жөнүндө кыскача...'} className="w-full dark:bg-slate-950/70 bg-slate-50 border dark:border-slate-800 border-slate-200 dark:text-white text-slate-900 rounded-2xl py-3 px-4 text-sm focus:outline-none focus:ring-1 focus:ring-rose-500 transition-all resize-none" />
+                    </div>
+                  </div>
+                )}
+
+                {/* Tab: Staff */}
+                {dormModalTab === 'staff' && (
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold dark:text-slate-400 text-slate-500 uppercase tracking-wider">{language === 'ru' ? 'ФИО коменданта' : 'Коменданттын аты-жөнү'}</label>
+                      <input value={dormForm.commandantName} onChange={e => setDormForm(p => ({ ...p, commandantName: e.target.value }))} placeholder="Алиева Назира Бакытовна" className="w-full dark:bg-slate-950/70 bg-slate-50 border dark:border-slate-800 border-slate-200 dark:text-white text-slate-900 rounded-2xl py-3 px-4 text-sm focus:outline-none focus:ring-1 focus:ring-rose-500 transition-all" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold dark:text-slate-400 text-slate-500 uppercase tracking-wider">{language === 'ru' ? 'Телефон коменданта' : 'Коменданттын телефону'}</label>
+                      <input type="tel" value={dormForm.commandantPhone} onChange={e => setDormForm(p => ({ ...p, commandantPhone: e.target.value }))} placeholder="+996 (555) 11-22-33" className="w-full dark:bg-slate-950/70 bg-slate-50 border dark:border-slate-800 border-slate-200 dark:text-white text-slate-900 rounded-2xl py-3 px-4 text-sm focus:outline-none focus:ring-1 focus:ring-rose-500 transition-all" />
+                    </div>
+                  </div>
+                )}
+
+                {/* Tab: Amenities */}
+                {dormModalTab === 'amenities' && (
+                  <div className="space-y-4">
+                    <div className="flex gap-2">
+                      <input
+                        value={newAmenity}
+                        onChange={e => setNewAmenity(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); if (newAmenity.trim()) { setDormForm(p => ({ ...p, amenities: [...p.amenities, newAmenity.trim()] })); setNewAmenity('') } } }}
+                        placeholder={language === 'ru' ? 'Быстрый Wi-Fi...' : 'Ыкчам Wi-Fi...'}
+                        className="flex-1 dark:bg-slate-950/70 bg-slate-50 border dark:border-slate-800 border-slate-200 dark:text-white text-slate-900 rounded-2xl py-3 px-4 text-sm focus:outline-none focus:ring-1 focus:ring-rose-500 transition-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => { if (newAmenity.trim()) { setDormForm(p => ({ ...p, amenities: [...p.amenities, newAmenity.trim()] })); setNewAmenity('') } }}
+                        className="px-4 py-3 bg-rose-500 text-white font-bold rounded-2xl hover:brightness-110 cursor-pointer text-sm"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {dormForm.amenities.map((a, i) => (
+                        <span key={i} className="flex items-center gap-1.5 px-3 py-1.5 dark:bg-slate-800 bg-slate-100 border dark:border-slate-700 border-slate-200 rounded-xl text-xs font-semibold">
+                          <Tag className="w-3 h-3 text-rose-500" />
+                          {a}
+                          <button type="button" onClick={() => setDormForm(p => ({ ...p, amenities: p.amenities.filter((_, j) => j !== i) }))} className="ml-1 text-slate-400 hover:text-rose-500 cursor-pointer">
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      ))}
+                      {dormForm.amenities.length === 0 && (
+                        <p className="text-xs text-slate-400">{language === 'ru' ? 'Удобства не добавлены. Введите и нажмите Enter или +' : 'Шарттар кошулган жок.'}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Tab: Media */}
+                {dormModalTab === 'media' && (
+                  <div className="space-y-6">
+                    {/* Photos */}
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <ImagePlus className="w-4 h-4 text-rose-500" />
+                        <h4 className="font-bold text-sm">{language === 'ru' ? 'Фотографии (URL-ссылки)' : 'Сүрөттөр (URL шилтемелер)'}</h4>
+                      </div>
+                      <div className="flex gap-2">
+                        <input
+                          value={newPhoto}
+                          onChange={e => setNewPhoto(e.target.value)}
+                          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); if (newPhoto.trim()) { setDormForm(p => ({ ...p, photos: [...p.photos, newPhoto.trim()] })); setNewPhoto('') } } }}
+                          placeholder="https://images.unsplash.com/..."
+                          className="flex-1 dark:bg-slate-950/70 bg-slate-50 border dark:border-slate-800 border-slate-200 dark:text-white text-slate-900 rounded-2xl py-3 px-4 text-sm focus:outline-none focus:ring-1 focus:ring-rose-500 transition-all font-mono"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => { if (newPhoto.trim()) { setDormForm(p => ({ ...p, photos: [...p.photos, newPhoto.trim()] })); setNewPhoto('') } }}
+                          className="px-4 py-3 bg-rose-500 text-white font-bold rounded-2xl hover:brightness-110 cursor-pointer"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {dormForm.photos.map((url, i) => (
+                          <div key={i} className="relative group rounded-2xl overflow-hidden border dark:border-slate-800 border-slate-200 aspect-video bg-slate-100 dark:bg-slate-950">
+                            <img src={url} alt="" className="w-full h-full object-cover" onError={e => { (e.target as HTMLImageElement).src = '' }} />
+                            <button
+                              type="button"
+                              onClick={() => setDormForm(p => ({ ...p, photos: p.photos.filter((_, j) => j !== i) }))}
+                              className="absolute top-2 right-2 p-1 rounded-lg bg-rose-500/90 text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                            <div className="absolute bottom-2 left-2 text-2xs font-bold text-white bg-black/50 px-1.5 py-0.5 rounded">#{i + 1}</div>
+                          </div>
+                        ))}
+                        {dormForm.photos.length === 0 && (
+                          <div className="col-span-3 py-8 text-center text-slate-400 text-xs border-2 border-dashed dark:border-slate-800 border-slate-200 rounded-2xl">
+                            {language === 'ru' ? 'Добавьте URL фотографий выше' : 'Жогоруда сүрөт URLлерин кошуңуз'}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Video */}
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Video className="w-4 h-4 text-violet-500" />
+                        <h4 className="font-bold text-sm">{language === 'ru' ? 'Видео (YouTube или прямой URL)' : 'Видео (YouTube же түз URL)'}</h4>
+                      </div>
+                      <div className="flex gap-2 items-center">
+                        <Link2 className="w-4 h-4 text-slate-400 shrink-0" />
+                        <input
+                          value={dormForm.videoUrl}
+                          onChange={e => setDormForm(p => ({ ...p, videoUrl: e.target.value }))}
+                          placeholder="https://www.youtube.com/watch?v=..."
+                          className="flex-1 dark:bg-slate-950/70 bg-slate-50 border dark:border-slate-800 border-slate-200 dark:text-white text-slate-900 rounded-2xl py-3 px-4 text-sm focus:outline-none focus:ring-1 focus:ring-rose-500 transition-all font-mono"
+                        />
+                        {dormForm.videoUrl && (
+                          <button type="button" onClick={() => setDormForm(p => ({ ...p, videoUrl: '' }))} className="p-2 text-rose-500 hover:text-rose-600 cursor-pointer">
+                            <X className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                      {dormForm.videoUrl && (
+                        <div className="rounded-2xl overflow-hidden border dark:border-slate-800 border-slate-200 aspect-video">
+                          <iframe
+                            src={dormForm.videoUrl.includes('youtube.com/watch') ? dormForm.videoUrl.replace('watch?v=', 'embed/') : dormForm.videoUrl.includes('youtu.be/') ? dormForm.videoUrl.replace('youtu.be/', 'youtube.com/embed/') : dormForm.videoUrl}
+                            className="w-full h-full"
+                            allowFullScreen
+                            title="video preview"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer buttons */}
+              <div className="flex gap-3 px-8 py-5 border-t dark:border-slate-800 border-slate-200 shrink-0">
+                <button type="button" onClick={() => setShowDormModal(false)} className="flex-1 py-3 dark:bg-slate-950 bg-slate-100 hover:bg-slate-200 dark:hover:bg-slate-850 border dark:border-slate-800 border-slate-200 font-bold text-sm rounded-2xl transition-all cursor-pointer">
+                  {language === 'ru' ? 'Отмена' : 'Жокко чыгаруу'}
+                </button>
+                <button type="submit" className="flex-1 py-3 bg-gradient-to-r from-rose-500 to-violet-605 hover:brightness-110 text-white font-bold text-sm rounded-2xl shadow-lg transition-all cursor-pointer">
+                  {editingDorm ? (language === 'ru' ? 'Сохранить' : 'Сактоо') : (language === 'ru' ? 'Добавить' : 'Кошуу')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Add / Edit Commandant Modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm animate-fadeIn p-4">
@@ -979,13 +1295,13 @@ export default function AdminDashboard() {
                   required
                   value={commForm.dormId}
                   onChange={e => {
-                    const dorm = BASE_DORMITORIES.find(d => d.id === e.target.value)
+                    const dorm = dormitories.find(d => d.id === e.target.value)
                     setCommForm(p => ({ ...p, dormId: e.target.value, dormName: dorm?.name || '' }))
                   }}
                   className="w-full dark:bg-slate-950/70 bg-slate-50 border dark:border-slate-800 border-slate-200 dark:text-white text-slate-900 rounded-2xl py-3 px-4 text-sm focus:outline-none focus:ring-1 focus:ring-rose-500 focus:border-rose-500 transition-all cursor-pointer"
                 >
                   <option value="">{language === 'kg' ? 'Жатакананы тандаңыз...' : language === 'ru' ? 'Выберите общежитие...' : 'Select dormitory...'}</option>
-                  {BASE_DORMITORIES.map(d => (
+                  {dormitories.map(d => (
                     <option key={d.id} value={d.id}>{d.name}</option>
                   ))}
                 </select>

@@ -84,12 +84,16 @@ export default function DormitoryDetails({ params }: { params: Promise<{ id: str
   const [ocrStatus, setOcrStatus] = useState('')
   const [ocrSuccess, setOcrSuccess] = useState(false)
 
-  // Photos
-  const photos = [
+  // Load admin-managed dormitory record (photos + video from admin panel)
+  const dormRecord = localDb.getDormitory(id)
+
+  const fallbackPhotos = [
     'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80',
     'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=800&q=80',
     'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80'
   ]
+  const photos = dormRecord?.photos?.length ? dormRecord.photos : fallbackPhotos
+  const dormVideoUrl = dormRecord?.videoUrl || ''
 
   // Available room options mock database for this dormitory
   const [roomsCatalog, setRoomsCatalog] = useState([
@@ -369,22 +373,28 @@ export default function DormitoryDetails({ params }: { params: Promise<{ id: str
 
               {/* Video Tour Viewer */}
               {activeTab === 'video' && (
-                <div className="w-full h-full relative flex items-center justify-center bg-slate-955 text-white">
-                  <img 
-                    src={photos[1]} 
-                    alt="Video Tour Cover" 
-                    className="w-full h-full object-cover opacity-30 absolute"
+                dormVideoUrl ? (
+                  <iframe
+                    src={dormVideoUrl.includes('youtube.com/watch') ? dormVideoUrl.replace('watch?v=', 'embed/') : dormVideoUrl.includes('youtu.be/') ? 'https://www.youtube.com/embed/' + dormVideoUrl.split('youtu.be/')[1]?.split('?')[0] : dormVideoUrl}
+                    className="w-full h-full"
+                    allowFullScreen
+                    title="Dormitory Video Tour"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   />
-                  <div className="z-10 text-center space-y-4">
-                    <button className="p-5 rounded-full bg-rose-500 text-white hover:scale-110 transition-all duration-300 shadow-lg shadow-rose-500/25 animate-pulse cursor-pointer">
-                      <Video className="w-8 h-8 fill-current" />
-                    </button>
-                    <div className="space-y-1">
-                      <span className="text-xs uppercase font-extrabold tracking-widest text-slate-450">{language === 'kg' ? 'Видео-турду баштоо' : language === 'ru' ? 'Запустить видео-экскурсию' : 'Start Video Presentation'}</span>
-                      <span className="text-[10px] block text-slate-500">Duration: 2:45 mins</span>
+                ) : (
+                  <div className="w-full h-full relative flex items-center justify-center bg-slate-955 text-white">
+                    <img src={photos[1] || photos[0]} alt="Video Tour Cover" className="w-full h-full object-cover opacity-30 absolute" />
+                    <div className="z-10 text-center space-y-4">
+                      <div className="p-5 rounded-full bg-rose-500/20 border border-rose-500/30 text-rose-400 mx-auto w-fit">
+                        <Video className="w-8 h-8" />
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-xs uppercase font-extrabold tracking-widest text-slate-450">{language === 'kg' ? 'Видео кошулган жок' : language === 'ru' ? 'Видео не добавлено' : 'No video added'}</span>
+                        <span className="text-[10px] block text-slate-500">{language === 'ru' ? 'Администратор может добавить видео в панели управления' : 'Admin can add a video in the admin panel'}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )
               )}
 
               {/* 3D Planner Viewer */}
