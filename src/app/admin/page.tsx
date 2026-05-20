@@ -5,12 +5,13 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
 import { useLanguageAndTheme } from '../LanguageAndThemeContext'
 import { dictionaries } from '@/utils/dictionaries'
-import { 
-  Shield, Users, Landmark, FileText, CheckCircle, XCircle, Clock, 
+import {
+  Shield, Users, Landmark, FileText, CheckCircle, XCircle, Clock,
   Plus, Settings, LogOut, ChevronRight, Search, Filter, RefreshCw, BarChart3,
-  Menu, X, Sun, Moon, Globe, Bell, Printer, CreditCard, ClipboardList
+  Menu, X, Sun, Moon, Globe, Bell, Printer, CreditCard, ClipboardList,
+  Trash2, Pencil, Eye, EyeOff, UserPlus
 } from 'lucide-react'
-import { localDb } from '@/utils/localDb'
+import { localDb, type CommandantAccount } from '@/utils/localDb'
 
 export default function AdminDashboard() {
   const router = useRouter()
@@ -45,6 +46,15 @@ export default function AdminDashboard() {
 
   const [applications, setApplications] = useState<any[]>([])
 
+  // Commandant management
+  const [commandants, setCommandants] = useState<CommandantAccount[]>([])
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [editingComm, setEditingComm] = useState<CommandantAccount | null>(null)
+  const [showPass, setShowPass] = useState(false)
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
+  const emptyCommForm = { fullName: '', email: '', password: '', dormId: '', dormName: '', phone: '' }
+  const [commForm, setCommForm] = useState(emptyCommForm)
+
   // Static base occupancy values (used to prevent double-counting on re-renders)
   const BASE_DORMITORIES = [
     { id: '1', name: '№1 Жатакана (Башкы корпус)', address: 'Ленин көчөсү, 331', rooms: 120, beds: 450, occupied: 412, status: 'Активдүү' },
@@ -74,6 +84,7 @@ export default function AdminDashboard() {
     // Load initial data
     setApplications(localDb.getApplications())
     setBookings(localDb.getBookings())
+    setCommandants(localDb.getCommandants())
   }, [])
 
   // Sync statistics and occupancy dynamically
@@ -115,6 +126,34 @@ export default function AdminDashboard() {
 
   const markAllRead = () => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })))
+  }
+
+  const handleSaveCommandant = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (editingComm) {
+      const updates: Partial<Omit<CommandantAccount, 'id' | 'createdAt'>> = {
+        fullName: commForm.fullName,
+        email: commForm.email,
+        dormId: commForm.dormId,
+        dormName: commForm.dormName,
+        phone: commForm.phone,
+      }
+      if (commForm.password) updates.password = commForm.password
+      localDb.updateCommandant(editingComm.id, updates)
+    } else {
+      localDb.addCommandant(commForm)
+    }
+    setCommandants(localDb.getCommandants())
+    setShowAddModal(false)
+    setEditingComm(null)
+    setCommForm(emptyCommForm)
+    setShowPass(false)
+  }
+
+  const removeCommandant = (id: string) => {
+    localDb.removeCommandant(id)
+    setCommandants(localDb.getCommandants())
+    setDeleteConfirmId(null)
   }
 
   return (
@@ -678,17 +717,116 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* Tab 4: Users */}
+        {/* Tab 4: Commandant Management */}
         {activeTab === 'users' && (
-          <div className="p-8 md:p-12 rounded-3xl dark:bg-slate-900/20 bg-white border dark:border-slate-900 border-slate-200 text-center space-y-4 shadow-sm animate-fadeIn">
-            <Users className="w-12 h-12 text-rose-500 mx-auto opacity-70" />
-            <h3 className="text-xl font-bold">{d.usersManagementTitle}</h3>
-            <p className="text-sm text-slate-400 max-w-md mx-auto leading-relaxed">
-              {d.usersManagementDesc}
-            </p>
-            <button className="px-5 py-2.5 dark:bg-slate-950 bg-slate-100 hover:bg-slate-200 dark:hover:bg-slate-900 border dark:border-slate-800 border-slate-250 text-xs font-bold rounded-xl transition-all mx-auto cursor-pointer">
-              {d.btnStaffList}
-            </button>
+          <div className="space-y-6 animate-fadeIn">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <h3 className="text-xl font-bold">
+                  {language === 'kg' ? 'Коменданттарды башкаруу' : language === 'ru' ? 'Управление комендантами' : 'Commandant Management'}
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  {language === 'kg' ? 'Жатаканаларга коменданттарды дайындаңыз жана алардын аккаунттарын башкарыңыз' : language === 'ru' ? 'Назначайте комендантов по общежитиям и управляйте их аккаунтами' : 'Assign commandants to dormitories and manage their login accounts'}
+                </p>
+              </div>
+              <button
+                onClick={() => { setEditingComm(null); setCommForm(emptyCommForm); setShowPass(false); setShowAddModal(true) }}
+                className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-rose-500 to-violet-605 hover:brightness-110 text-white font-bold rounded-xl shadow-lg transition-all duration-300 cursor-pointer"
+              >
+                <UserPlus className="w-4 h-4" />
+                {language === 'kg' ? 'Комендант кошуу' : language === 'ru' ? 'Добавить коменданта' : 'Add Commandant'}
+              </button>
+            </div>
+
+            <div className="dark:bg-slate-900/30 bg-white border dark:border-slate-900 border-slate-200 rounded-3xl overflow-hidden shadow-sm">
+              {commandants.length === 0 ? (
+                <div className="p-12 text-center space-y-4">
+                  <Users className="w-12 h-12 text-rose-500 mx-auto opacity-60" />
+                  <p className="text-sm text-slate-450 font-semibold">
+                    {language === 'kg' ? 'Комендант табылган жок.' : language === 'ru' ? 'Комендантов пока нет.' : 'No commandants yet.'}
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    {language === 'kg' ? '"Комендант кошуу" баскычын басып, биринчи коменданты кошуңуз.' : language === 'ru' ? 'Нажмите «Добавить коменданта», чтобы создать первый аккаунт.' : 'Click "Add Commandant" to create the first account.'}
+                  </p>
+                </div>
+              ) : (
+                <div className="w-full overflow-x-auto">
+                  <table className="w-full text-left border-collapse min-w-[750px]">
+                    <thead>
+                      <tr className="dark:bg-slate-950/60 bg-slate-100/60 border-b dark:border-slate-900 border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                        <th className="py-4 px-6">{language === 'kg' ? 'Аты-жөнү' : language === 'ru' ? 'ФИО' : 'Full Name'}</th>
+                        <th className="py-4 px-6">Email</th>
+                        <th className="py-4 px-6">{language === 'kg' ? 'Жатакана' : language === 'ru' ? 'Общежитие' : 'Dormitory'}</th>
+                        <th className="py-4 px-6">{language === 'kg' ? 'Телефон' : language === 'ru' ? 'Телефон' : 'Phone'}</th>
+                        <th className="py-4 px-6">{language === 'kg' ? 'Кошулган' : language === 'ru' ? 'Добавлен' : 'Added'}</th>
+                        <th className="py-4 px-6 text-right">{language === 'kg' ? 'Аракеттер' : language === 'ru' ? 'Действия' : 'Actions'}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y dark:divide-slate-900/80 divide-slate-200 text-sm">
+                      {commandants.map(comm => (
+                        <tr key={comm.id} className="hover:bg-slate-500/5 transition-colors">
+                          <td className="py-4 px-6">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-xl dark:bg-slate-800 bg-slate-100 flex items-center justify-center text-xs font-black text-rose-500 border dark:border-slate-700 border-slate-200 shrink-0">
+                                {comm.fullName[0]?.toUpperCase()}
+                              </div>
+                              <span className="font-bold">{comm.fullName}</span>
+                            </div>
+                          </td>
+                          <td className="py-4 px-6 font-mono text-xs text-slate-500">{comm.email}</td>
+                          <td className="py-4 px-6 font-semibold dark:text-slate-300 text-slate-700 text-xs">{comm.dormName}</td>
+                          <td className="py-4 px-6 text-slate-500 text-xs">{comm.phone || '—'}</td>
+                          <td className="py-4 px-6 text-slate-500 text-xs">{comm.createdAt}</td>
+                          <td className="py-4 px-6 text-right">
+                            {deleteConfirmId === comm.id ? (
+                              <div className="flex justify-end items-center gap-2">
+                                <span className="text-xs text-rose-500 font-bold">
+                                  {language === 'kg' ? 'Ишенесизби?' : language === 'ru' ? 'Уверены?' : 'Sure?'}
+                                </span>
+                                <button
+                                  onClick={() => removeCommandant(comm.id)}
+                                  className="px-2.5 py-1 text-xs bg-rose-500 text-white rounded-lg font-bold cursor-pointer hover:brightness-110"
+                                >
+                                  {language === 'kg' ? 'Өчүрүү' : language === 'ru' ? 'Удалить' : 'Delete'}
+                                </button>
+                                <button
+                                  onClick={() => setDeleteConfirmId(null)}
+                                  className="px-2.5 py-1 text-xs dark:bg-slate-800 bg-slate-100 rounded-lg font-bold cursor-pointer"
+                                >
+                                  {language === 'kg' ? 'Жок' : language === 'ru' ? 'Нет' : 'No'}
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex justify-end gap-2">
+                                <button
+                                  onClick={() => {
+                                    setEditingComm(comm)
+                                    setCommForm({ fullName: comm.fullName, email: comm.email, password: '', dormId: comm.dormId, dormName: comm.dormName, phone: comm.phone })
+                                    setShowPass(false)
+                                    setShowAddModal(true)
+                                  }}
+                                  className="p-1.5 rounded-lg bg-slate-500/10 hover:bg-slate-500/20 border border-slate-500/10 text-slate-500 transition-colors cursor-pointer"
+                                  title={language === 'ru' ? 'Редактировать' : 'Edit'}
+                                >
+                                  <Pencil className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => setDeleteConfirmId(comm.id)}
+                                  className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-500 transition-colors cursor-pointer"
+                                  title={language === 'ru' ? 'Удалить' : 'Delete'}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -770,6 +908,124 @@ export default function AdminDashboard() {
           </div>
         )}
       </main>
+
+      {/* Add / Edit Commandant Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm animate-fadeIn p-4">
+          <div className="w-full max-w-md dark:bg-slate-900 bg-white rounded-3xl border dark:border-slate-800 border-slate-200 shadow-2xl p-8 space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-bold">
+                {editingComm
+                  ? (language === 'kg' ? 'Коменданттын маалыматын өзгөртүү' : language === 'ru' ? 'Редактировать коменданта' : 'Edit Commandant')
+                  : (language === 'kg' ? 'Жаңы комендант кошуу' : language === 'ru' ? 'Добавить коменданта' : 'Add New Commandant')
+                }
+              </h3>
+              <button onClick={() => setShowAddModal(false)} className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveCommandant} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold dark:text-slate-400 text-slate-500 uppercase tracking-wider">
+                  {language === 'kg' ? 'Аты-жөнү (ФИО)' : language === 'ru' ? 'ФИО коменданта' : 'Full Name'}
+                </label>
+                <input
+                  required
+                  value={commForm.fullName}
+                  onChange={e => setCommForm(p => ({ ...p, fullName: e.target.value }))}
+                  placeholder="Алиева Назира Бакытовна"
+                  className="w-full dark:bg-slate-950/70 bg-slate-50 border dark:border-slate-800 border-slate-200 dark:text-white text-slate-900 rounded-2xl py-3 px-4 text-sm focus:outline-none focus:ring-1 focus:ring-rose-500 focus:border-rose-500 transition-all"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold dark:text-slate-400 text-slate-500 uppercase tracking-wider">Email</label>
+                <input
+                  required
+                  type="email"
+                  value={commForm.email}
+                  onChange={e => setCommForm(p => ({ ...p, email: e.target.value }))}
+                  placeholder="comm2@oshsu.kg"
+                  className="w-full dark:bg-slate-950/70 bg-slate-50 border dark:border-slate-800 border-slate-200 dark:text-white text-slate-900 rounded-2xl py-3 px-4 text-sm focus:outline-none focus:ring-1 focus:ring-rose-500 focus:border-rose-500 transition-all"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold dark:text-slate-400 text-slate-500 uppercase tracking-wider">
+                  {language === 'kg' ? 'Сыр сөз' : language === 'ru' ? 'Пароль' : 'Password'}
+                  {editingComm && <span className="normal-case font-normal ml-1 text-slate-400">({language === 'ru' ? 'оставьте пустым — без изменений' : 'leave empty to keep current'})</span>}
+                </label>
+                <div className="relative">
+                  <input
+                    required={!editingComm}
+                    type={showPass ? 'text' : 'password'}
+                    value={commForm.password}
+                    onChange={e => setCommForm(p => ({ ...p, password: e.target.value }))}
+                    placeholder="••••••••"
+                    className="w-full dark:bg-slate-950/70 bg-slate-50 border dark:border-slate-800 border-slate-200 dark:text-white text-slate-900 rounded-2xl py-3 px-4 pr-11 text-sm focus:outline-none focus:ring-1 focus:ring-rose-500 focus:border-rose-500 transition-all"
+                  />
+                  <button type="button" onClick={() => setShowPass(!showPass)} className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 cursor-pointer">
+                    {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold dark:text-slate-400 text-slate-500 uppercase tracking-wider">
+                  {language === 'kg' ? 'Жатакана (дайындоо)' : language === 'ru' ? 'Назначить общежитие' : 'Assigned Dormitory'}
+                </label>
+                <select
+                  required
+                  value={commForm.dormId}
+                  onChange={e => {
+                    const dorm = BASE_DORMITORIES.find(d => d.id === e.target.value)
+                    setCommForm(p => ({ ...p, dormId: e.target.value, dormName: dorm?.name || '' }))
+                  }}
+                  className="w-full dark:bg-slate-950/70 bg-slate-50 border dark:border-slate-800 border-slate-200 dark:text-white text-slate-900 rounded-2xl py-3 px-4 text-sm focus:outline-none focus:ring-1 focus:ring-rose-500 focus:border-rose-500 transition-all cursor-pointer"
+                >
+                  <option value="">{language === 'kg' ? 'Жатакананы тандаңыз...' : language === 'ru' ? 'Выберите общежитие...' : 'Select dormitory...'}</option>
+                  {BASE_DORMITORIES.map(d => (
+                    <option key={d.id} value={d.id}>{d.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold dark:text-slate-400 text-slate-500 uppercase tracking-wider">
+                  {language === 'kg' ? 'Телефон (милдеттүү эмес)' : language === 'ru' ? 'Телефон (необязательно)' : 'Phone (optional)'}
+                </label>
+                <input
+                  type="tel"
+                  value={commForm.phone}
+                  onChange={e => setCommForm(p => ({ ...p, phone: e.target.value }))}
+                  placeholder="+996 (555) 12-34-56"
+                  className="w-full dark:bg-slate-950/70 bg-slate-50 border dark:border-slate-800 border-slate-200 dark:text-white text-slate-900 rounded-2xl py-3 px-4 text-sm focus:outline-none focus:ring-1 focus:ring-rose-500 focus:border-rose-500 transition-all"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className="flex-1 py-3 dark:bg-slate-950 bg-slate-100 hover:bg-slate-200 dark:hover:bg-slate-850 border dark:border-slate-800 border-slate-200 font-bold text-sm rounded-2xl transition-all cursor-pointer"
+                >
+                  {language === 'kg' ? 'Жокко чыгаруу' : language === 'ru' ? 'Отмена' : 'Cancel'}
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-3 bg-gradient-to-r from-rose-500 to-violet-605 hover:brightness-110 text-white font-bold text-sm rounded-2xl shadow-lg transition-all cursor-pointer"
+                >
+                  {editingComm
+                    ? (language === 'kg' ? 'Сактоо' : language === 'ru' ? 'Сохранить' : 'Save Changes')
+                    : (language === 'kg' ? 'Кошуу' : language === 'ru' ? 'Добавить' : 'Add')
+                  }
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* PRINT-ONLY FORMAL UNIVERSITY BOOKING REPORT DOWLOADABLE VIA media-print */}
       <div className="hidden print:block print-report-section w-full p-10 bg-white text-slate-900 font-serif leading-relaxed">

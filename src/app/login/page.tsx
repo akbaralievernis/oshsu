@@ -69,6 +69,21 @@ export default function LoginPage() {
           return
         }
 
+        // Check localDb commandants (added by admin)
+        const localComm = localDb.findCommandantByEmail(email.toLowerCase().trim())
+        if (localComm) {
+          if (password !== localComm.password) {
+            setErrorMsg(language === 'kg' ? 'Сыр сөз туура эмес.' : language === 'ru' ? 'Неверный пароль.' : 'Incorrect password.')
+            setLoading(false)
+            return
+          }
+          setSuccessMsg(d.authSuccessRedirect)
+          document.cookie = `oshsu_role=commandant; path=/; max-age=86400; SameSite=Lax`
+          localDb.setCurrentUser({ email: localComm.email, fullName: localComm.fullName, role: 'commandant' })
+          setTimeout(() => { router.push('/commandant'); router.refresh() }, 800)
+          return
+        }
+
         if (!isSupabaseConfigured()) {
           setErrorMsg(
             language === 'kg'

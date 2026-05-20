@@ -37,6 +37,17 @@ export interface RoomBooking {
   status: 'pending' | 'approved'
 }
 
+export interface CommandantAccount {
+  id: string
+  fullName: string
+  email: string
+  password: string
+  dormId: string
+  dormName: string
+  phone: string
+  createdAt: string
+}
+
 // 7 Dormitories Static Data
 export const SEVEN_DORMITORIES = [
   {
@@ -527,6 +538,41 @@ export const localDb = {
     bookings.unshift(newBooking)
     localStorage.setItem('oshsu_bookings', JSON.stringify(bookings))
     return newBooking
+  },
+
+  // Commandants
+  getCommandants(): CommandantAccount[] {
+    if (typeof window === 'undefined') return []
+    const raw = localStorage.getItem('oshsu_commandants')
+    return raw ? JSON.parse(raw) : []
+  },
+
+  addCommandant(data: Omit<CommandantAccount, 'id' | 'createdAt'>): CommandantAccount {
+    const list = this.getCommandants()
+    const entry: CommandantAccount = {
+      ...data,
+      id: 'comm_' + Math.random().toString(36).substr(2, 9),
+      createdAt: new Date().toLocaleDateString('ru-RU')
+    }
+    list.push(entry)
+    localStorage.setItem('oshsu_commandants', JSON.stringify(list))
+    return entry
+  },
+
+  updateCommandant(id: string, updates: Partial<Omit<CommandantAccount, 'id' | 'createdAt'>>) {
+    const list = this.getCommandants()
+    localStorage.setItem('oshsu_commandants', JSON.stringify(
+      list.map(c => c.id === id ? { ...c, ...updates } : c)
+    ))
+  },
+
+  removeCommandant(id: string) {
+    const list = this.getCommandants()
+    localStorage.setItem('oshsu_commandants', JSON.stringify(list.filter(c => c.id !== id)))
+  },
+
+  findCommandantByEmail(email: string): CommandantAccount | null {
+    return this.getCommandants().find(c => c.email.toLowerCase() === email.toLowerCase()) || null
   },
 
   // Database Reset
