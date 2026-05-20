@@ -5,9 +5,9 @@ import { useRouter } from 'next/navigation'
 import { createClient, isSupabaseConfigured } from '@/utils/supabase/client'
 import { useLanguageAndTheme } from '../LanguageAndThemeContext'
 import { dictionaries } from '@/utils/dictionaries'
-import { 
-  LogIn, UserPlus, Mail, Lock, User, AlertCircle, CheckCircle, 
-  Shield, Sun, Moon, Globe, Sparkles
+import {
+  LogIn, UserPlus, Mail, Lock, User, AlertCircle, CheckCircle,
+  Shield, Sun, Moon, Globe
 } from 'lucide-react'
 import { localDb } from '@/utils/localDb'
 
@@ -31,37 +31,6 @@ export default function LoginPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
-  const handleDemoLogin = (role: 'student' | 'commandant' | 'admin') => {
-    let email = ''
-    let fullName = ''
-    if (role === 'student') {
-      email = 'student@oshsu.kg'
-      fullName = 'Алиев Тимур Самадович'
-    } else if (role === 'commandant') {
-      email = 'nazira@oshsu.kg'
-      fullName = 'Алиева Назира Бакытовна'
-    } else {
-      email = 'admin@oshsu.kg'
-      fullName = 'Суперадмин ОшМУ'
-    }
-
-    // Set custom session cookie for Next.js middleware
-    document.cookie = `oshsu_role=${role}; path=/; max-age=86400; SameSite=Lax`
-
-    // Set localDb currentUser
-    localDb.setCurrentUser({ email, fullName, role })
-
-    // Redirect
-    if (role === 'admin') {
-      router.push('/admin')
-    } else if (role === 'commandant') {
-      router.push('/commandant')
-    } else {
-      router.push('/dashboard')
-    }
-    router.refresh()
-  }
-
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -79,10 +48,10 @@ export default function LoginPage() {
         if (!isSupabaseConfigured()) {
           setErrorMsg(
             language === 'kg'
-              ? 'Supabase конфигурацияланган жок. Төмөндөгү Демо-кириүүнү колдонуңуз.'
+              ? 'Supabase конфигурацияланган жок. Системалык администратор менен байланышыңыз.'
               : language === 'ru'
-              ? 'Supabase не настроен. Используйте кнопки Демо-входа ниже.'
-              : 'Supabase is not configured. Please use the Demo Login buttons below.'
+              ? 'Supabase не настроен. Обратитесь к системному администратору.'
+              : 'Supabase is not configured. Please contact the system administrator.'
           )
           setLoading(false)
           return
@@ -422,44 +391,6 @@ export default function LoginPage() {
               )}
             </button>
           </form>
-        </div>
-
-        {/* Demo Access Section */}
-        <div className="dark:bg-slate-900/60 bg-white border dark:border-slate-800/80 border-slate-200 rounded-3xl p-6 shadow-2xl space-y-4 text-center">
-          <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-rose-500 uppercase tracking-widest">
-            <Sparkles className="w-4 h-4 text-rose-505 animate-pulse" />
-            <span>{language === 'kg' ? 'Ыкчам Демо-кириүү' : language === 'ru' ? 'Быстрый Демо-вход' : 'Quick Demo Access'}</span>
-          </div>
-          <p className="text-[11px] dark:text-slate-400 text-slate-500 max-w-xs mx-auto leading-relaxed font-semibold">
-            {language === 'kg' 
-              ? 'Логин тербей эле каалаган ролду тандап личный кабинетти ачыңыз!' 
-              : language === 'ru' 
-              ? 'Выберите роль для мгновенного входа в личный кабинет без ввода логина и пароля!'
-              : 'Choose any role to instantly open the corresponding dashboard without typing credentials!'}
-          </p>
-          <div className="grid grid-cols-3 gap-2 pt-1">
-            <button 
-              type="button"
-              onClick={() => handleDemoLogin('student')}
-              className="px-2 py-3 dark:bg-slate-900 bg-slate-100 hover:bg-rose-500/10 hover:border-rose-500/20 border dark:border-slate-800 border-slate-250 text-[10px] font-black rounded-xl transition-all cursor-pointer shadow-sm"
-            >
-              👩‍🎓 {language === 'kg' ? 'Студент' : language === 'ru' ? 'Студент' : 'Student'}
-            </button>
-            <button 
-              type="button"
-              onClick={() => handleDemoLogin('commandant')}
-              className="px-2 py-3 dark:bg-slate-900 bg-slate-100 hover:bg-rose-500/10 hover:border-rose-500/20 border dark:border-slate-800 border-slate-250 text-[10px] font-black rounded-xl transition-all cursor-pointer shadow-sm"
-            >
-              🔑 {language === 'kg' ? 'Комендант' : language === 'ru' ? 'Комендант' : 'Commandant'}
-            </button>
-            <button 
-              type="button"
-              onClick={() => handleDemoLogin('admin')}
-              className="px-2 py-3 dark:bg-slate-900 bg-slate-100 hover:bg-rose-500/10 hover:border-rose-500/20 border dark:border-slate-800 border-slate-250 text-[10px] font-black rounded-xl transition-all cursor-pointer shadow-sm"
-            >
-              🛡️ {language === 'kg' ? 'Админ' : language === 'ru' ? 'Админ' : 'Admin'}
-            </button>
-          </div>
         </div>
 
         {/* Footer */}
