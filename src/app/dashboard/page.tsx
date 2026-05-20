@@ -129,9 +129,13 @@ export default function StudentDashboard() {
     }
 
     async function checkAuth() {
-      const { data: { user: sbUser } } = await supabase.auth.getUser()
-      if (sbUser) {
-        setStudentName(sbUser.user_metadata?.full_name || sbUser.email || user?.fullName || '')
+      try {
+        const { data: { user: sbUser } } = await supabase.auth.getUser()
+        if (sbUser) {
+          setStudentName(sbUser.user_metadata?.full_name || sbUser.email || user?.fullName || '')
+        }
+      } catch {
+        // Supabase not configured — stay with localDb user
       }
     }
     checkAuth()

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/utils/supabase/client'
+import { createClient, isSupabaseConfigured } from '@/utils/supabase/client'
 import { useLanguageAndTheme } from '../LanguageAndThemeContext'
 import { dictionaries } from '@/utils/dictionaries'
 import { 
@@ -76,6 +76,18 @@ export default function LoginPage() {
 
     try {
       if (mode === 'signin') {
+        if (!isSupabaseConfigured()) {
+          setErrorMsg(
+            language === 'kg'
+              ? 'Supabase конфигурацияланган жок. Төмөндөгү Демо-кириүүнү колдонуңуз.'
+              : language === 'ru'
+              ? 'Supabase не настроен. Используйте кнопки Демо-входа ниже.'
+              : 'Supabase is not configured. Please use the Demo Login buttons below.'
+          )
+          setLoading(false)
+          return
+        }
+
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -111,6 +123,18 @@ export default function LoginPage() {
         }, 1500)
 
       } else {
+        if (!isSupabaseConfigured()) {
+          setErrorMsg(
+            language === 'kg'
+              ? 'Supabase конфигурацияланган жок. Демо-режимде каттоо мүмкүн эмес.'
+              : language === 'ru'
+              ? 'Supabase не настроен. Регистрация недоступна в демо-режиме.'
+              : 'Supabase is not configured. Registration is unavailable in demo mode.'
+          )
+          setLoading(false)
+          return
+        }
+
         // Sign up flow via our secure auto-confirm API endpoint with automatic client-side fallback
         let signUpSuccess = false
         try {
