@@ -8,8 +8,9 @@ import { dictionaries } from '@/utils/dictionaries'
 import { 
   Shield, Users, Landmark, FileText, CheckCircle, XCircle, Clock, 
   Plus, Settings, LogOut, ChevronRight, Search, Filter, RefreshCw, BarChart3,
-  Menu, X, Sun, Moon, Globe, Bell
+  Menu, X, Sun, Moon, Globe, Bell, Printer, CreditCard, ClipboardList
 } from 'lucide-react'
+import { localDb } from '@/utils/localDb'
 
 export default function AdminDashboard() {
   const router = useRouter()
@@ -17,9 +18,10 @@ export default function AdminDashboard() {
   const { language, setLanguage, theme, toggleTheme } = useLanguageAndTheme()
   const d = dictionaries[language]
   
-  const [activeTab, setActiveTab] = useState<'overview' | 'applications' | 'dormitories' | 'users'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'applications' | 'dormitories' | 'users' | 'bookings'>('overview')
   const [loading, setLoading] = useState(false)
   const [adminName, setAdminName] = useState('Администратор')
+  const [bookings, setBookings] = useState<any[]>([])
 
   // Mobile drawer states
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -36,52 +38,79 @@ export default function AdminDashboard() {
   // Stats
   const [stats, setStats] = useState({
     totalStudents: 1420,
-    totalDorms: 5,
-    pendingApps: 18,
-    activeTickets: 12
+    totalDorms: 7,
+    pendingApps: 0,
+    activeTickets: 5
   })
 
-  const [applications, setApplications] = useState([
-    { id: '1', student: 'Асанов Алмаз Талантбекович', email: 'almaz.asanov@oshsu.kg', dorm: '№1 Жатакана', status: 'pending', date: '19.05.2026' },
-    { id: '2', student: 'Бакытова Айсулуу Кубанычбековна', email: 'aisuluu.b@oshsu.kg', dorm: '№2 Жатакана', status: 'approved', date: '18.05.2026' },
-    { id: '3', student: 'Жапаров Данияр Темирбекович', email: 'daniyar.j@oshsu.kg', dorm: '№3 Жатакана', status: 'pending', date: '18.05.2026' },
-    { id: '4', student: 'Сыдыкова Айжамал Адилетовна', email: 'aijamal.s@oshsu.kg', dorm: '№1 Жатакана', status: 'rejected', date: '17.05.2026' },
-    { id: '5', student: 'Кадыров Эрнис Бектурсунович', email: 'ernis.k@oshsu.kg', dorm: '№3 Жатакана', status: 'approved', date: '16.05.2026' },
-  ])
+  const [applications, setApplications] = useState<any[]>([])
 
-  const [dormitories, setDormitories] = useState([
-    { id: '1', name: '№1 Жатакана (Башкы корпус)', address: 'Ленин көчөсү, 331', rooms: 150, beds: 450, occupied: 412, status: 'Активдүү' },
-    { id: '2', name: '№2 Жатакана (Эл аралык)', address: 'Исанов көчөсү, 73', rooms: 200, beds: 600, occupied: 580, status: 'Активдүү' },
-    { id: '3', name: '№3 Жатакана (Жаңы конуш)', address: 'Г. Айтиев көчөсү, 12', rooms: 250, beds: 800, occupied: 610, status: 'Толуп калды' },
-  ])
+  // Static base occupancy values (used to prevent double-counting on re-renders)
+  const BASE_DORMITORIES = [
+    { id: '1', name: '№1 Жатакана (Башкы корпус)', address: 'Ленин көчөсү, 331', rooms: 120, beds: 450, occupied: 412, status: 'Активдүү' },
+    { id: '2', name: '№2 Жатакана (Эл аралык)', address: 'Исанов көчөсү, 73', rooms: 150, beds: 600, occupied: 580, status: 'Активдүү' },
+    { id: '3', name: '№3 Жатакана (Жаңы конуш)', address: 'Г. Айтиев көчөсү, 12', rooms: 200, beds: 800, occupied: 610, status: 'Толуп калды' },
+    { id: '4', name: '№4 Жатакана (Медициналык)', address: 'Курманжан Датка көчөсү, 204', rooms: 130, beds: 500, occupied: 420, status: 'Активдүү' },
+    { id: '5', name: '№5 Жатакана (Педагогикалык)', address: 'Г. Айтиев көчөсү, 8', rooms: 90, beds: 350, occupied: 310, status: 'Активдүү' },
+    { id: '6', name: '№6 Жатакана (Техникалык)', address: 'Ленин көчөсү, 287', rooms: 100, beds: 400, occupied: 360, status: 'Активдүү' },
+    { id: '7', name: '№7 Жатакана (Спортук)', address: 'Исанов көчөсү, 89', rooms: 80, beds: 300, occupied: 250, status: 'Активдүү' },
+  ]
+
+  const [dormitories, setDormitories] = useState(BASE_DORMITORIES)
 
   // Check auth & role
   useEffect(() => {
-    async function checkAuth() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        setAdminName(user.user_metadata?.full_name || user.email || 'Администратор')
-      }
+    const user = localDb.getCurrentUser()
+    if (!user) {
+      router.push('/login')
+      return
     }
-    checkAuth()
+    if (user.role !== 'admin') {
+      router.push(user.role === 'commandant' ? '/commandant' : '/dashboard')
+      return
+    }
+    setAdminName(user.fullName || user.email || 'Администратор')
+
+    // Load initial data
+    setApplications(localDb.getApplications())
+    setBookings(localDb.getBookings())
   }, [])
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut()
+  // Sync statistics and occupancy dynamically
+  useEffect(() => {
+    const allApps = localDb.getApplications()
+    const allBookings = localDb.getBookings()
+    
+    // Update dormitories occupancy dynamically based on bookings (uses static base values to prevent double-counting)
+    setDormitories(
+      BASE_DORMITORIES.map(dorm => {
+        const bookingsCount = allBookings.filter(b => b.dormId === dorm.id).length
+        const totalOccupied = dorm.occupied + bookingsCount
+        return {
+          ...dorm,
+          occupied: totalOccupied > dorm.beds ? dorm.beds : totalOccupied
+        }
+      })
+    )
+
+    setStats({
+      totalStudents: 1420 + allBookings.length,
+      totalDorms: 7,
+      pendingApps: allApps.filter(a => a.status === 'pending').length,
+      activeTickets: 5
+    })
+  }, [applications, bookings])
+
+  const handleLogout = () => {
+    document.cookie = "oshsu_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;"
+    localDb.clearCurrentUser()
     router.push('/login')
-    router.refresh()
   }
 
   const updateAppStatus = (id: string, newStatus: 'approved' | 'rejected') => {
-    setApplications(prev => 
-      prev.map(app => app.id === id ? { ...app, status: newStatus } : app)
-    )
-    if (newStatus === 'approved' || newStatus === 'rejected') {
-      setStats(prev => ({
-        ...prev,
-        pendingApps: Math.max(0, prev.pendingApps - 1)
-      }))
-    }
+    localDb.updateApplicationStatus(id, newStatus)
+    const updatedApps = localDb.getApplications()
+    setApplications(updatedApps)
   }
 
   const markAllRead = () => {
@@ -196,6 +225,13 @@ export default function AdminDashboard() {
                   {d.navApplications}
                 </button>
                 <button
+                  onClick={() => { setActiveTab('bookings'); setMobileMenuOpen(false); }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl transition-all cursor-pointer ${activeTab === 'bookings' ? 'bg-gradient-to-r from-rose-500 to-violet-605 text-white shadow-lg' : 'text-slate-555 hover:bg-slate-100 dark:hover:bg-slate-855'}`}
+                >
+                  <CreditCard className="w-4 h-4" />
+                  {language === 'kg' ? 'Төлөмдөр жана орундар' : language === 'ru' ? 'Платежи и брони' : 'Payments & Bookings'}
+                </button>
+                <button
                   onClick={() => { setActiveTab('dormitories'); setMobileMenuOpen(false); }}
                   className={`w-full flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl transition-all cursor-pointer ${activeTab === 'dormitories' ? 'bg-gradient-to-r from-rose-500 to-violet-605 text-white shadow-lg' : 'text-slate-555 hover:bg-slate-100 dark:hover:bg-slate-855'}`}
                 >
@@ -264,6 +300,21 @@ export default function AdminDashboard() {
                   {stats.pendingApps}
                 </span>
               )}
+            </button>
+
+            <button
+              onClick={() => setActiveTab('bookings')}
+              className={`w-full flex items-center justify-between px-4 py-3.5 text-sm font-semibold rounded-2xl transition-all duration-300 cursor-pointer ${
+                activeTab === 'bookings'
+                  ? 'bg-gradient-to-r from-rose-500 to-violet-600 text-white font-bold shadow-lg shadow-rose-550/10'
+                  : 'dark:text-slate-400 text-slate-555 hover:text-rose-500 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/50'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <CreditCard className="w-5 h-5" />
+                {language === 'kg' ? 'Төлөмдөр жана орундар' : language === 'ru' ? 'Платежи и брони' : 'Payments & Bookings'}
+              </div>
+              <ChevronRight className="w-4 h-4" />
             </button>
 
             <button
@@ -529,10 +580,10 @@ export default function AdminDashboard() {
                     {applications.map(app => (
                       <tr key={app.id} className="hover:bg-slate-500/5 transition-colors">
                         <td className="py-4 px-6">
-                          <div className="font-bold">{app.student}</div>
-                          <div className="text-xs text-slate-500">{app.email}</div>
+                          <div className="font-bold">{app.studentName}</div>
+                          <div className="text-xs text-slate-500">{app.studentEmail}</div>
                         </td>
-                        <td className="py-4 px-6 font-semibold dark:text-slate-300 text-slate-700">{app.dorm}</td>
+                        <td className="py-4 px-6 font-semibold dark:text-slate-300 text-slate-700">{app.dormName}</td>
                         <td className="py-4 px-6 text-slate-500">{app.date}</td>
                         <td className="py-4 px-6">
                           {app.status === 'pending' && (
@@ -640,7 +691,197 @@ export default function AdminDashboard() {
             </button>
           </div>
         )}
+
+        {/* Tab 5: Bookings list & Payments Table */}
+        {activeTab === 'bookings' && (
+          <div className="space-y-6 animate-fadeIn print:hidden">
+            {/* Header section with download button */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <h3 className="text-xl font-bold">
+                  {language === 'kg' ? 'Жатакана орундарын ээлөө жана төлөмдөр журналы' : language === 'ru' ? 'Журнал бронирования мест и платежей' : 'Dormitory Room Bookings & Payments Register'}
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  {language === 'kg' ? 'Студенттердин тастыкталган төлөмдөрүнүн жана жатакана бөлмөлөрүнүн тизмеси' : language === 'ru' ? 'Официальный реестр оплаченных броней и распределения комнат студентов' : 'Official ledger of verified payments and room allocations for students'}
+                </p>
+              </div>
+
+              <button 
+                onClick={() => window.print()}
+                className="w-full sm:w-auto flex items-center justify-center gap-2.5 px-5 py-3 bg-gradient-to-r from-rose-500 to-violet-605 hover:brightness-110 text-white font-bold rounded-2xl shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer"
+              >
+                <Printer className="w-5 h-5" />
+                {language === 'kg' ? 'Официалдуу отчетту PDF жүктөө' : language === 'ru' ? 'Скачать отчет PDF' : 'Download PDF Report'}
+              </button>
+            </div>
+
+            {/* Dynamic Bookings Table */}
+            <div className="dark:bg-slate-900/30 bg-white border dark:border-slate-900 border-slate-200 rounded-3xl overflow-hidden shadow-sm">
+              <div className="w-full overflow-x-auto">
+                {bookings.length === 0 ? (
+                  <div className="p-12 text-center space-y-4">
+                    <CreditCard className="w-12 h-12 text-rose-500 mx-auto opacity-70" />
+                    <p className="text-sm text-slate-450">
+                      {language === 'kg' ? 'Брондоолор табылган жок' : language === 'ru' ? 'Оплаченные бронирования отсутствуют' : 'No verified room bookings found'}
+                    </p>
+                  </div>
+                ) : (
+                  <table className="w-full text-left border-collapse min-w-[900px]">
+                    <thead>
+                      <tr className="dark:bg-slate-950/60 bg-slate-100/60 border-b dark:border-slate-900 border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                        <th className="py-4.5 px-6 font-bold">{language === 'kg' ? 'Студент' : language === 'ru' ? 'Студент' : 'Student'}</th>
+                        <th className="py-4.5 px-6 font-bold">{language === 'kg' ? 'Жатакана' : language === 'ru' ? 'Общежитие' : 'Dormitory'}</th>
+                        <th className="py-4.5 px-6 font-bold">{language === 'kg' ? 'Бөлмө / Орун' : language === 'ru' ? 'Комната / Место' : 'Room / Bed'}</th>
+                        <th className="py-4.5 px-6 font-bold">{language === 'kg' ? 'Сумма' : language === 'ru' ? 'Сумма' : 'Amount'}</th>
+                        <th className="py-4.5 px-6 font-bold">{language === 'kg' ? 'Төлөм ыкмасы' : language === 'ru' ? 'Способ оплаты' : 'Payment Type'}</th>
+                        <th className="py-4.5 px-6 font-bold">{language === 'kg' ? 'Транзакция ID' : language === 'ru' ? 'Транзакция ID' : 'Transaction ID'}</th>
+                        <th className="py-4.5 px-6 font-bold">{language === 'kg' ? 'Брондолгон күн' : language === 'ru' ? 'Дата брони' : 'Date'}</th>
+                        <th className="py-4.5 px-6 text-right font-bold">{language === 'kg' ? 'Абалы' : language === 'ru' ? 'Статус' : 'Status'}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y dark:divide-slate-900/80 divide-slate-200 text-sm">
+                      {bookings.map(book => (
+                        <tr key={book.id} className="hover:bg-slate-500/5 transition-colors">
+                          <td className="py-4 px-6">
+                            <div className="font-bold">{book.studentName}</div>
+                            <div className="text-xs text-slate-500">{book.studentEmail}</div>
+                          </td>
+                          <td className="py-4 px-6 font-semibold dark:text-slate-350 text-slate-700">{book.dormName}</td>
+                          <td className="py-4 px-6">
+                            <div className="font-semibold text-rose-500">{book.roomNumber}-бөлмө</div>
+                            <div className="text-xs text-slate-450">{book.bedNumber}</div>
+                          </td>
+                          <td className="py-4 px-6 font-extrabold text-emerald-600 dark:text-emerald-450">{book.amount}</td>
+                          <td className="py-4 px-6 font-semibold">{book.paymentType}</td>
+                          <td className="py-4 px-6 font-mono text-xs text-slate-500">{book.referenceId}</td>
+                          <td className="py-4 px-6 text-slate-555">{book.date}</td>
+                          <td className="py-4 px-6 text-right">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-bold rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-450">
+                              {language === 'kg' ? 'Төлөндү' : language === 'ru' ? 'Оплачено' : 'Paid & Confirmed'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </main>
+
+      {/* PRINT-ONLY FORMAL UNIVERSITY BOOKING REPORT DOWLOADABLE VIA media-print */}
+      <div className="hidden print:block print-report-section w-full p-10 bg-white text-slate-900 font-serif leading-relaxed">
+        <style dangerouslySetInnerHTML={{ __html: `
+          @media print {
+            body {
+              background: white !important;
+              color: black !important;
+            }
+            .print\\:hidden {
+              display: none !important;
+            }
+            header, aside, main, .bg-gradient-to-br, .blur-3xl {
+              display: none !important;
+            }
+            .hidden.print\\:block {
+              display: block !important;
+            }
+          }
+        `}} />
+        
+        {/* University Header */}
+        <div className="text-center space-y-2 border-b-2 border-slate-900 pb-6 mb-8">
+          <div className="text-2xl font-black uppercase tracking-wider">
+            КЫРГЫЗ РЕСПУБЛИКАСЫНЫН БИЛИМ БЕРҮҮ ЖАНА ИЛИМ МИНИСТРЛИГИ
+          </div>
+          <div className="text-xl font-extrabold uppercase tracking-wide">
+            ОШ МАМЛЕКЕТТИК УНИВЕРСИТЕТИ (ОшМУ)
+          </div>
+          <div className="text-sm font-semibold text-slate-550 tracking-widest">
+            Государственный Университет Ош (ОшГУ) | Osh State University (OshSU)
+          </div>
+          <div className="text-xs text-slate-400 font-medium">
+            Ош шаары, Ленин көчөсү, 331 | www.oshsu.kg | info@oshsu.kg
+          </div>
+        </div>
+
+        {/* Report Meta Info */}
+        <div className="flex justify-between items-start mb-8 text-xs font-semibold">
+          <div className="space-y-1">
+            <div><strong>Документ:</strong> Жатаканаларга орун ээлөө жана төлөмдөр боюнча расмий реестр</div>
+            <div><strong>Реестр ID:</strong> REG-{Date.now().toString().slice(-6)}</div>
+            <div><strong>Генерация кылган колдонуучу:</strong> {adminName}</div>
+          </div>
+          <div className="text-right space-y-1">
+            <div><strong>Генерацияланган күнү:</strong> {new Date().toLocaleDateString('ru-RU')}</div>
+            <div><strong>Убактысы:</strong> {new Date().toLocaleTimeString('ru-RU')}</div>
+            <div><strong>Кагаз форматы:</strong> A4 Портрет</div>
+          </div>
+        </div>
+
+        {/* Title */}
+        <div className="text-center mb-8">
+          <h2 className="text-lg font-black uppercase tracking-wide underline decoration-double">
+            Студенттерди жатаканаларга жайгаштыруу жана төлөмдөрдүн расмий ведомосту
+          </h2>
+        </div>
+
+        {/* Official Printable Table */}
+        <table className="w-full text-left border-collapse border border-slate-800 text-xs mb-10">
+          <thead>
+            <tr className="bg-slate-100 border-b border-slate-800 text-[10px] font-bold uppercase">
+              <th className="border border-slate-800 py-3 px-2 text-center w-8 font-bold">№</th>
+              <th className="border border-slate-800 py-3 px-3 font-bold">Студент</th>
+              <th className="border border-slate-800 py-3 px-3 font-bold">Жатакана</th>
+              <th className="border border-slate-800 py-3 px-2 text-center font-bold">Бөлмө</th>
+              <th className="border border-slate-800 py-3 px-2 text-center font-bold">Орун</th>
+              <th className="border border-slate-800 py-3 px-3 text-right font-bold">Сумма</th>
+              <th className="border border-slate-800 py-3 px-3 text-center font-bold">Ыкма</th>
+              <th className="border border-slate-800 py-3 px-3 font-mono text-center font-bold">Транзакция ID</th>
+              <th className="border border-slate-800 py-3 px-2 text-center font-bold">Дата</th>
+            </tr>
+          </thead>
+          <tbody>
+            {bookings.map((book, idx) => (
+              <tr key={book.id} className="border-b border-slate-800">
+                <td className="border border-slate-800 py-2.5 px-2 text-center font-bold">{idx + 1}</td>
+                <td className="border border-slate-800 py-2.5 px-3">
+                  <div className="font-bold">{book.studentName}</div>
+                  <div className="text-[10px] text-slate-500 font-mono">{book.studentEmail}</div>
+                </td>
+                <td className="border border-slate-800 py-2.5 px-3 font-semibold">{book.dormName}</td>
+                <td className="border border-slate-800 py-2.5 px-2 text-center font-bold">{book.roomNumber}</td>
+                <td className="border border-slate-800 py-2.5 px-2 text-center">{book.bedNumber}</td>
+                <td className="border border-slate-800 py-2.5 px-3 text-right font-black">{book.amount}</td>
+                <td className="border border-slate-800 py-2.5 px-3 text-center font-semibold">{book.paymentType}</td>
+                <td className="border border-slate-800 py-2.5 px-3 font-mono text-center text-[10px]">{book.referenceId}</td>
+                <td className="border border-slate-800 py-2.5 px-2 text-center">{book.date}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        {/* Totals and Signatures */}
+        <div className="grid grid-cols-2 gap-8 text-xs pt-6 border-t border-dashed border-slate-400">
+          <div className="space-y-2">
+            <div><strong>Жалпы брондолгон орундар:</strong> {bookings.length}</div>
+            <div><strong>Жалпы кабыл алынган төлөмдөр суммасы:</strong> {bookings.reduce((sum, b) => sum + parseInt(b.amount.replace(/[^0-9]/g, '') || '0'), 0).toLocaleString()} KGS</div>
+          </div>
+          <div className="text-right space-y-12">
+            <div>
+              <strong>Башкы бухгалтер / Декандын колу:</strong>
+              <div className="mt-8 border-b border-slate-800 w-48 inline-block" />
+            </div>
+            <div>
+              <strong>Жатакана департаментинин башчысы:</strong>
+              <div className="mt-8 border-b border-slate-800 w-48 inline-block" />
+              <div className="text-[10px] text-slate-400 mt-1">ОшМУ Мөөр орду / Место печати</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

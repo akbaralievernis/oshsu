@@ -8,8 +8,9 @@ import { dictionaries } from '@/utils/dictionaries'
 import { 
   Shield, Landmark, Users, ClipboardList, CheckCircle, AlertCircle, Wrench,
   Check, LogOut, ChevronRight, Sparkles, Phone, UserPlus, Menu, X, Sun, Moon, Globe,
-  ArrowUpRight, HelpCircle, Activity, ShieldCheck, Bell
+  ArrowUpRight, HelpCircle, Activity, ShieldCheck, Bell, UserCheck
 } from 'lucide-react'
+import { localDb } from '@/utils/localDb'
 
 interface Room {
   id: string
@@ -27,8 +28,9 @@ export default function CommandantDashboard() {
   const { language, setLanguage, theme, toggleTheme } = useLanguageAndTheme()
   const d = dictionaries[language]
   
-  const [activeTab, setActiveTab] = useState<'rooms' | 'tickets' | 'students'>('rooms')
+  const [activeTab, setActiveTab] = useState<'rooms' | 'tickets' | 'students' | 'applications'>('rooms')
   const [commandantName, setCommandantName] = useState('Комендант')
+  const [applications, setApplications] = useState<any[]>([])
 
   // Mobile drawer states
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -78,21 +80,91 @@ export default function CommandantDashboard() {
     { id: '3', room: '103', student: 'Арстанбекова Гүлзат', title: language === 'kg' ? 'Терезе жабылбайт' : 'Окно не закрывается', urgency: 'low', status: 'resolved', date: '18.05.2026' },
   ])
 
-  // Check auth & role
+  // Check auth & role & dynamic loading
   useEffect(() => {
-    async function checkAuth() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        setCommandantName(user.user_metadata?.full_name || user.email || 'Комендант')
-      }
+    const user = localDb.getCurrentUser()
+    if (!user) {
+      router.push('/login')
+      return
     }
-    checkAuth()
+    if (user.role !== 'commandant') {
+      router.push(user.role === 'admin' ? '/admin' : '/dashboard')
+      return
+    }
+    setCommandantName(user.fullName || user.email || 'Комендант')
+
+    // Load dynamic applications from localDb
+    setApplications(localDb.getApplications())
+
+    // Load dynamic room residents from localDb bookings
+    const allBookings = localDb.getBookings()
+    setRooms(prevRooms => {
+      return prevRooms.map(room => {
+        // Find bookings for this room number
+        const roomBookings = allBookings.filter(b => b.roomNumber === room.id)
+        const residents = roomBookings.map(b => b.studentName)
+        
+        // Pad or truncate to room.beds size
+        const residentNames = Array(room.beds).fill('')
+        residents.forEach((res, i) => {
+          if (i < room.beds) {
+            residentNames[i] = res
+          }
+        })
+
+        const cleanResidents = residentNames.filter(Boolean)
+
+        return {
+          ...room,
+          occupied: cleanResidents.length,
+          residents: residentNames
+        }
+      })
+    })
   }, [])
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut()
+  // Keep stats in sync dynamically
+  useEffect(() => {
+    const totalOccupied = rooms.reduce((acc, r) => acc + r.occupied, 0)
+    const totalBeds = rooms.reduce((acc, r) => acc + r.beds, 0)
+    
+    setStats({
+      activeStudents: 412 + totalOccupied,
+      emptyBeds: Math.max(0, totalBeds - totalOccupied),
+      activeTickets: tickets.filter(t => t.status === 'new').length,
+      cleanRooms: rooms.filter(r => r.status === 'clean').length
+    })
+  }, [rooms, tickets])
+
+  // Action handlers
+  const handleUpdateAppStatus = (appId: string, status: 'approved' | 'rejected') => {
+    localDb.updateApplicationStatus(appId, status)
+    setApplications(localDb.getApplications())
+
+    const app = localDb.getApplications().find(a => a.id === appId)
+    if (app) {
+      const studentName = app.studentName
+      const textKg = `Студент ${studentName} арызы ${status === 'approved' ? 'жактырылды' : 'четке кагылды'}.`
+      const textRu = `Заявка студента ${studentName} была ${status === 'approved' ? 'одобрена' : 'отклонена'}.`
+      const textEn = `Application of student ${studentName} was ${status === 'approved' ? 'approved' : 'rejected'}.`
+      setNotifications(prev => [
+        {
+          id: Date.now().toString(),
+          textKg,
+          textRu,
+          textEn,
+          date: 'Жаңы эле',
+          read: false
+        },
+        ...prev
+      ])
+    }
+  }
+
+  const handleLogout = () => {
+    document.cookie = "oshsu_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;"
+    localDb.clearCurrentUser()
     router.push('/login')
-    router.refresh()
   }
 
   const resolveTicket = (id: string) => {
@@ -163,8 +235,8 @@ export default function CommandantDashboard() {
       prev.map(r => {
         if (r.id === selectedRoom.id) {
           const newResidents = [...r.residents]
-          newResidents.splice(index, 1)
-          const newOccupied = newResidents.length
+          newResidents[index] = ''
+          const newOccupied = newResidents.filter(Boolean).length
 
           setStats(s => ({
             ...s,
@@ -280,7 +352,7 @@ export default function CommandantDashboard() {
                 </div>
                 <div>
                   <div className="text-sm font-bold">{commandantName}</div>
-                  <div className="text-xs text-slate-500">{d.commandant}</div>
+                  <div className="text-xs text-slate-555">{d.commandant}</div>
                 </div>
               </div>
 
@@ -288,21 +360,28 @@ export default function CommandantDashboard() {
               <nav className="space-y-2">
                 <button
                   onClick={() => { setActiveTab('rooms'); setMobileMenuOpen(false); }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl transition-all cursor-pointer ${activeTab === 'rooms' ? 'bg-gradient-to-r from-rose-500 to-violet-600 text-white shadow-lg' : 'text-slate-555 hover:bg-slate-100 dark:hover:bg-slate-850'}`}
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl transition-all cursor-pointer ${activeTab === 'rooms' ? 'bg-gradient-to-r from-rose-500 to-violet-605 text-white shadow-lg' : 'text-slate-555 hover:bg-slate-100 dark:hover:bg-slate-850'}`}
                 >
                   <Landmark className="w-4 h-4" />
                   {d.roomsMapTitle}
                 </button>
                 <button
+                  onClick={() => { setActiveTab('applications'); setMobileMenuOpen(false); }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl transition-all cursor-pointer ${activeTab === 'applications' ? 'bg-gradient-to-r from-rose-500 to-violet-605 text-white shadow-lg' : 'text-slate-555 hover:bg-slate-100 dark:hover:bg-slate-850'}`}
+                >
+                  <ClipboardList className="w-4 h-4" />
+                  {language === 'kg' ? 'Жашаганга арыздар' : language === 'ru' ? 'Заявки студентов' : 'Student Applications'}
+                </button>
+                <button
                   onClick={() => { setActiveTab('tickets'); setMobileMenuOpen(false); }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl transition-all cursor-pointer ${activeTab === 'tickets' ? 'bg-gradient-to-r from-rose-500 to-violet-600 text-white shadow-lg' : 'text-slate-555 hover:bg-slate-100 dark:hover:bg-slate-850'}`}
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl transition-all cursor-pointer ${activeTab === 'tickets' ? 'bg-gradient-to-r from-rose-500 to-violet-650 text-white shadow-lg' : 'text-slate-555 hover:bg-slate-100 dark:hover:bg-slate-850'}`}
                 >
                   <Wrench className="w-4 h-4" />
                   {d.studentTicketsTitle}
                 </button>
                 <button
                   onClick={() => { setActiveTab('students'); setMobileMenuOpen(false); }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl transition-all cursor-pointer ${activeTab === 'students' ? 'bg-gradient-to-r from-rose-500 to-violet-600 text-white shadow-lg' : 'text-slate-555 hover:bg-slate-100 dark:hover:bg-slate-850'}`}
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl transition-all cursor-pointer ${activeTab === 'students' ? 'bg-gradient-to-r from-rose-500 to-violet-605 text-white shadow-lg' : 'text-slate-555 hover:bg-slate-100 dark:hover:bg-slate-850'}`}
                 >
                   <Users className="w-4 h-4" />
                   {d.studentsCardtitle}
@@ -350,6 +429,25 @@ export default function CommandantDashboard() {
                 {language === 'kg' ? 'Бөлмөлөрдүн схемасы' : language === 'ru' ? 'Схема комнат (2D)' : 'Rooms Schema (2D)'}
               </div>
               <ChevronRight className="w-4 h-4" />
+            </button>
+
+            <button
+              onClick={() => setActiveTab('applications')}
+              className={`w-full flex items-center justify-between px-4 py-3.5 text-sm font-semibold rounded-2xl transition-all duration-300 cursor-pointer ${
+                activeTab === 'applications'
+                  ? 'bg-gradient-to-r from-rose-500 to-violet-600 text-white font-bold shadow-lg shadow-rose-550/10'
+                  : 'dark:text-slate-400 text-slate-555 hover:text-rose-500 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/50'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <ClipboardList className="w-5 h-5" />
+                {language === 'kg' ? 'Жашаганга арыздар' : language === 'ru' ? 'Заявки студентов' : 'Student Applications'}
+              </div>
+              {applications.filter(a => a.status === 'pending').length > 0 && (
+                <span className={`px-2 py-0.5 text-xs font-black rounded-full ${activeTab === 'applications' ? 'bg-slate-950 text-white' : 'bg-rose-500 text-white'}`}>
+                  {applications.filter(a => a.status === 'pending').length}
+                </span>
+              )}
             </button>
 
             <button
@@ -803,6 +901,104 @@ export default function CommandantDashboard() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tab 4: Student Applications tab */}
+        {activeTab === 'applications' && (
+          <div className="space-y-6 animate-fadeIn">
+            <h3 className="text-xl font-bold">
+              {language === 'kg' ? 'Студенттердин жатаканага тапшырган арыздары' : language === 'ru' ? 'Заявления студентов на заселение' : 'Student Dormitory Applications'}
+            </h3>
+
+            <div className="dark:bg-slate-900/30 bg-white border dark:border-slate-900 border-slate-200 rounded-3xl overflow-hidden shadow-sm">
+              <div className="w-full overflow-x-auto">
+                {applications.length === 0 ? (
+                  <div className="p-12 text-center space-y-4">
+                    <ClipboardList className="w-12 h-12 text-rose-500 mx-auto opacity-70" />
+                    <p className="text-sm text-slate-450">
+                      {language === 'kg' ? 'Арыздар жок' : language === 'ru' ? 'Нет активных заявлений' : 'No submitted applications found'}
+                    </p>
+                  </div>
+                ) : (
+                  <table className="w-full text-left border-collapse min-w-[800px]">
+                    <thead>
+                      <tr className="dark:bg-slate-950/60 bg-slate-100/60 border-b dark:border-slate-900 border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                        <th className="py-4.5 px-6 font-bold">{language === 'kg' ? 'Студент' : language === 'ru' ? 'Студент' : 'Student'}</th>
+                        <th className="py-4.5 px-6 font-bold">{language === 'kg' ? 'Факультет / Курс' : language === 'ru' ? 'Факультет / Курс' : 'Faculty / Year'}</th>
+                        <th className="py-4.5 px-6 font-bold">{language === 'kg' ? 'Соц. Статус' : language === 'ru' ? 'Соц. Статус' : 'Social Status'}</th>
+                        <th className="py-4.5 px-6 font-bold">{language === 'kg' ? 'Жатакана' : language === 'ru' ? 'Общежитие' : 'Dormitory'}</th>
+                        <th className="py-4.5 px-6 font-bold">{language === 'kg' ? 'Тапшырылган күнү' : language === 'ru' ? 'Дата подачи' : 'Date'}</th>
+                        <th className="py-4.5 px-6 font-bold">{language === 'kg' ? 'Арыздын абалы' : language === 'ru' ? 'Статус' : 'Status'}</th>
+                        <th className="py-4.5 px-6 text-right font-bold">{language === 'kg' ? 'Аракеттер' : language === 'ru' ? 'Действия' : 'Actions'}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y dark:divide-slate-900/80 divide-slate-200 text-sm">
+                      {applications.map(app => (
+                        <tr key={app.id} className="hover:bg-slate-500/5 transition-colors">
+                          <td className="py-4 px-6">
+                            <div className="font-bold">{app.studentName}</div>
+                            <div className="text-xs text-slate-500">{app.studentEmail}</div>
+                          </td>
+                          <td className="py-4 px-6">
+                            <div className="font-semibold">{app.faculty}</div>
+                            <div className="text-xs text-slate-450">{app.course}-курс</div>
+                          </td>
+                          <td className="py-4 px-6">
+                            <span className="px-2 py-0.5 text-2xs font-extrabold rounded-full bg-slate-100 dark:bg-slate-800 text-slate-650 dark:text-slate-300 border dark:border-slate-700 border-slate-200">
+                              {app.socialStatus}
+                            </span>
+                          </td>
+                          <td className="py-4 px-6 font-semibold text-rose-500">{app.dormName}</td>
+                          <td className="py-4 px-6 text-slate-555">{app.date}</td>
+                          <td className="py-4 px-6">
+                            {app.status === 'pending' ? (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-bold rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-500">
+                                {language === 'kg' ? 'Каралууда' : language === 'ru' ? 'На рассмотрении' : 'Pending'}
+                              </span>
+                            ) : app.status === 'approved' ? (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-bold rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-450">
+                                {language === 'kg' ? 'Жактырылды' : language === 'ru' ? 'Одобрено' : 'Approved'}
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-bold rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-605 dark:text-rose-455">
+                                {language === 'kg' ? 'Четке кагылды' : language === 'ru' ? 'Отклонено' : 'Rejected'}
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-4 px-6 text-right">
+                            {app.status === 'pending' ? (
+                              <div className="flex gap-2 justify-end">
+                                <button 
+                                  onClick={() => handleUpdateAppStatus(app.id, 'approved')}
+                                  className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-extrabold rounded-xl shadow-md hover:scale-105 active:scale-95 transition-all flex items-center gap-1 cursor-pointer"
+                                >
+                                  <Check className="w-3.5 h-3.5" />
+                                  {language === 'kg' ? 'Жактыруу' : language === 'ru' ? 'Одобрить' : 'Approve'}
+                                </button>
+                                <button 
+                                  onClick={() => handleUpdateAppStatus(app.id, 'rejected')}
+                                  className="px-3 py-1.5 bg-rose-550 hover:bg-rose-600 text-white text-xs font-extrabold rounded-xl shadow-md hover:scale-105 active:scale-95 transition-all flex items-center gap-1 cursor-pointer"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                  {language === 'kg' ? 'Четке кагуу' : language === 'ru' ? 'Отклонить' : 'Reject'}
+                                </button>
+                              </div>
+                            ) : (
+                              <span className="text-xs text-slate-500 italic">
+                                {app.status === 'approved' 
+                                  ? (language === 'kg' ? 'Жактырылды' : language === 'ru' ? 'Одобрено' : 'Approved')
+                                  : (language === 'kg' ? 'Четке кагылды' : language === 'ru' ? 'Отклонено' : 'Rejected')}
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
               </div>
             </div>
           </div>

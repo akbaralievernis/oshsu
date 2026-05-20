@@ -11,6 +11,7 @@ import {
   Menu, X, Sun, Moon, Globe, Printer, Bell, CreditCard, QrCode, UploadCloud,
   FileCheck2, Eye, Receipt
 } from 'lucide-react'
+import { localDb, SEVEN_DORMITORIES } from '@/utils/localDb'
 
 export default function StudentDashboard() {
   const router = useRouter()
@@ -49,8 +50,13 @@ export default function StudentDashboard() {
   const [ocrSuccess, setOcrSuccess] = useState(false)
 
   // Mock data for student housing details
-  const [hasRoom, setHasRoom] = useState(true)
-  const [applicationStatus, setApplicationStatus] = useState<'pending' | 'approved' | 'rejected'>('approved')
+  const [hasRoom, setHasRoom] = useState(false)
+  const [applicationStatus, setApplicationStatus] = useState<'pending' | 'approved' | 'rejected'>('pending')
+  const [myApplication, setMyApplication] = useState<any>(null)
+  const [myBooking, setMyBooking] = useState<any>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedTag, setSelectedTag] = useState('all')
+  const [currentUser, setCurrentUser] = useState<any>(null)
   
   const [assignedRoom, setAssignedRoom] = useState({
     dormName: language === 'kg' ? '№1 Жатакана (Башкы корпус)' : language === 'ru' ? 'Общежитие №1 (Главный корпус)' : 'Dormitory №1 (Main Campus)',
@@ -65,16 +71,77 @@ export default function StudentDashboard() {
 
   // Check auth & role
   useEffect(() => {
+    const user = localDb.getCurrentUser()
+    if (!user) {
+      router.push('/login')
+      return
+    }
+    if (user.role !== 'student') {
+      router.push(user.role === 'admin' ? '/admin' : '/commandant')
+      return
+    }
+    setCurrentUser(user)
+    setStudentName(user.fullName)
+
+    // Load data from localDb
+    const allApps = localDb.getApplications()
+    const allBookings = localDb.getBookings()
+
+    const userApp = allApps.find(app => app.studentEmail === user.email)
+    const userBooking = allBookings.find(b => b.studentEmail === user.email)
+
+    setMyApplication(userApp || null)
+    setMyBooking(userBooking || null)
+
+    if (userBooking) {
+      setHasRoom(true)
+      setPaymentStatus('paid')
+      setAssignedRoom({
+        dormName: userBooking.dormName,
+        roomNumber: userBooking.roomNumber,
+        floor: parseInt(userBooking.roomNumber[0]) || 2,
+        bedNumber: userBooking.bedNumber,
+        roommates: [
+          { name: 'Касымов Улукбек', faculty: language === 'kg' ? 'Медициналык факультет' : language === 'ru' ? 'Медицинский факультет' : 'Faculty of Medicine' },
+          { name: 'Абдуллаев Азамат', faculty: language === 'kg' ? 'Юридикалык колледж' : language === 'ru' ? 'Юридический колледж' : 'Legal College' },
+        ]
+      })
+      // Sync payment history with bookings
+      setPaymentHistory([
+        {
+          id: userBooking.id,
+          amount: userBooking.amount,
+          type: userBooking.paymentType,
+          date: userBooking.date,
+          status: 'approved',
+          ref: userBooking.referenceId
+        }
+      ])
+    } else {
+      setHasRoom(false)
+      setPaymentStatus('unpaid')
+    }
+
+    if (userApp) {
+      setApplicationStatus(userApp.status)
+    } else {
+      setApplicationStatus('rejected')
+    }
+
     async function checkAuth() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        setStudentName(user.user_metadata?.full_name || user.email || 'Студент')
+      const { data: { user: sbUser } } = await supabase.auth.getUser()
+      if (sbUser) {
+        setStudentName(sbUser.user_metadata?.full_name || sbUser.email || user?.fullName || '')
       }
     }
     checkAuth()
-  }, [])
+  }, [language])
 
   const handleLogout = async () => {
+    // Clear cookie
+    document.cookie = "oshsu_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;"
+    localDb.clearCurrentUser()
+
     await supabase.auth.signOut()
     router.push('/login')
     router.refresh()
@@ -165,7 +232,7 @@ export default function StudentDashboard() {
       <div className="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full dark:bg-violet-955/10 bg-violet-100/30 blur-[150px] opacity-40 pointer-events-none" />
 
       {/* MOBILE HEADER */}
-      <header className="lg:hidden w-full flex items-center justify-between px-6 py-4 dark:bg-slate-900/80 bg-white border-b dark:border-slate-900 border-slate-200 backdrop-blur-lg sticky top-0 z-35 shadow-sm transition-colors">
+      <header className="lg:hidden w-full flex items-center justify-between px-6 py-4 dark:bg-slate-900/80 bg-white border-b dark:border-slate-900 border-slate-200 backdrop-blur-lg sticky top-0 z-[35] shadow-sm transition-colors">
         <div className="flex items-center gap-2.5">
           <div className="p-2 rounded-xl bg-gradient-to-br dark:from-slate-900 dark:to-slate-800 from-slate-100 to-slate-50 border dark:border-slate-800 border-slate-200">
             <Shield className="w-5 h-5 text-rose-500" />
@@ -394,6 +461,50 @@ export default function StudentDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Room Details & Roommates (Left Column) */}
           <div className="lg:col-span-2 space-y-8">
+            {!hasRoom && (
+              <div className="p-6 md:p-8 rounded-3xl dark:bg-slate-900/30 bg-white border dark:border-slate-900 border-slate-200 shadow-md space-y-6">
+                <h3 className="text-xl font-bold">{d.appStatusTitle}</h3>
+                
+                {myApplication ? (
+                  <div className="flex items-center gap-5 p-6 rounded-2xl dark:bg-slate-950 bg-slate-100 border dark:border-slate-900 border-slate-200 animate-fadeIn">
+                    <div className={`p-3.5 rounded-xl border ${
+                      applicationStatus === 'approved' 
+                        ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-605 dark:text-emerald-450' 
+                        : applicationStatus === 'rejected'
+                        ? 'bg-red-500/10 border-red-500/20 text-red-655'
+                        : 'bg-rose-500/10 border-rose-500/20 text-rose-600'
+                    }`}>
+                      <ClipboardList className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-bold">
+                        {applicationStatus === 'approved' 
+                          ? d.appApprovedMsg 
+                          : applicationStatus === 'rejected'
+                          ? (language === 'kg' ? 'Арыз четке кагылды' : language === 'ru' ? 'Заявка отклонена' : 'Application rejected')
+                          : d.appPendingMsg}
+                      </div>
+                      <div className="text-xs text-slate-500 mt-1">
+                        {applicationStatus === 'approved' 
+                          ? (language === 'kg' ? `Сиздин арызыңыз жактырылды. Жатакана: ${myApplication.dormName}. Бөлмөнү ээлөө үчүн имараттын баракчасына өтүңүз.` : language === 'ru' ? `Ваша заявка одобрена. Общежитие: ${myApplication.dormName}. Перейдите на страницу здания, чтобы забронировать.` : `Your application has been approved. Dormitory: ${myApplication.dormName}. Go to the dormitory details page to book a room.`)
+                          : applicationStatus === 'rejected'
+                          ? (language === 'kg' ? 'Сиздин жайгашуу арызыңыз четке кагылды. Комендант менен байланышыңыз.' : language === 'ru' ? 'Ваша заявка была отклонена. Пожалуйста, свяжитесь с комендантом.' : 'Your application was rejected. Please contact the commandant.')
+                          : d.appPendingDesc}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-5 rounded-2xl bg-amber-500/5 border border-amber-500/20 text-amber-600 dark:text-amber-500 text-xs font-semibold animate-fadeIn">
+                    {language === 'kg' 
+                      ? 'Сизде жигердүү арыз жок. Жатакана алуу үчүн төмөнкү тизмеден имаратты тандап, арыз тапшырыңыз.' 
+                      : language === 'ru'
+                      ? 'У вас нет активной заявки. Для получения комнаты выберите общежитие из списка ниже и подайте заявку.'
+                      : 'You do not have an active application. To get a room, select a dormitory from the list below and apply.'}
+                  </div>
+                )}
+              </div>
+            )}
+
             {hasRoom ? (
               <div className="p-6 md:p-8 rounded-3xl dark:bg-slate-900/30 bg-white border dark:border-slate-900 border-slate-200 shadow-md space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -451,37 +562,91 @@ export default function StudentDashboard() {
                 </div>
               </div>
             ) : (
-              <div className="p-8 rounded-3xl dark:bg-slate-900/30 bg-white border dark:border-slate-900 border-slate-200 shadow-md space-y-6 text-center py-12">
-                <FileText className="w-12 h-12 text-rose-500 mx-auto opacity-70" />
-                <h3 className="text-xl font-bold">{d.unassignedStatus}</h3>
-                <p className="text-sm text-slate-400 max-w-md mx-auto leading-relaxed">
-                  {d.noRoomDesc}
-                </p>
+              // 7 DORMITORIES LIST FOR UNASSIGNED STUDENTS
+              <div className="space-y-6 animate-fadeIn">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <h3 className="text-xl font-extrabold tracking-tight flex items-center gap-2">
+                    <Landmark className="w-5 h-5 text-rose-500 animate-pulse" />
+                    {language === 'kg' ? 'Жатакана тандаңыз (7 имарат)' : language === 'ru' ? 'Выбор общежития (7 корпусов)' : 'Select a Dormitory (7 Buildings)'}
+                  </h3>
+
+                  {/* Search Bar */}
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder={language === 'kg' ? 'Издөө...' : language === 'ru' ? 'Поиск общежития...' : 'Search...'}
+                    className="px-4 py-2 text-xs rounded-xl dark:bg-slate-900 bg-white border dark:border-slate-800 border-slate-200 focus:outline-none focus:ring-1 focus:ring-rose-500 shadow-sm"
+                  />
+                </div>
+
+                {/* Dormitories Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {SEVEN_DORMITORIES.filter(dorm => {
+                    const info = dorm[language] || dorm['ru']
+                    return info.name.toLowerCase().includes(searchQuery.toLowerCase()) || info.desc.toLowerCase().includes(searchQuery.toLowerCase())
+                  }).map((dorm) => {
+                    const info = dorm[language] || dorm['ru']
+                    // Check if student applied to this specific dorm
+                    const isMyDorm = myApplication?.dormId === dorm.id
+                    
+                    return (
+                      <div 
+                        key={dorm.id} 
+                        className={`group relative rounded-3xl p-6 transition-all duration-300 hover:-translate-y-1 shadow-md border ${
+                          isMyDorm 
+                            ? 'dark:bg-rose-500/5 bg-rose-500/5 border-rose-500/30 dark:border-rose-500/30' 
+                            : 'dark:bg-slate-900/40 bg-white dark:border-slate-900 border-slate-200'
+                        }`}
+                      >
+                        <div className="flex justify-between items-start gap-2 mb-3">
+                          <span className="px-2.5 py-1 text-[9px] font-black rounded-lg bg-rose-500/10 text-rose-500 uppercase tracking-widest">
+                            {info.tag}
+                          </span>
+                          <span className="text-xs font-bold flex items-center gap-1 text-amber-500 shrink-0">
+                            ⭐ {info.rating}
+                          </span>
+                        </div>
+
+                        <h4 className="text-sm font-extrabold group-hover:text-rose-500 transition-colors mb-2">
+                          {info.name}
+                        </h4>
+
+                        <p className="text-2xs text-slate-400 leading-relaxed mb-4 line-clamp-3">
+                          {info.desc}
+                        </p>
+
+                        <div className="grid grid-cols-2 gap-3 text-2xs text-slate-500 border-t dark:border-slate-850/80 border-slate-200 pt-3.5 mb-4">
+                          <div>📍 {info.address}</div>
+                          <div>🏢 {info.floors} / {info.capacity}</div>
+                        </div>
+
+                        <button
+                          onClick={() => router.push(`/dormitory/${dorm.id}`)}
+                          className={`w-full py-2.5 rounded-xl text-2xs font-extrabold transition-all duration-300 flex items-center justify-center gap-1.5 cursor-pointer ${
+                            isMyDorm
+                              ? 'bg-rose-500 text-white shadow-lg hover:brightness-110'
+                              : 'dark:bg-slate-950 bg-slate-105 hover:bg-rose-500/10 hover:text-rose-555 border dark:border-slate-850 border-slate-200 text-slate-700 dark:text-slate-200'
+                          }`}
+                        >
+                          {isMyDorm ? (
+                            <>
+                              <Eye className="w-3.5 h-3.5" />
+                              {language === 'kg' ? 'Статусту көрүү' : language === 'ru' ? 'Посмотреть статус' : 'View Status'}
+                            </>
+                          ) : (
+                            <>
+                              <ChevronRight className="w-3.5 h-3.5" />
+                              {language === 'kg' ? 'Арыз тапшыруу / Толук маалымат' : language === 'ru' ? 'Подать заявку / Подробнее' : 'Apply Now / Details'}
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
             )}
-
-            {/* Application Progress Status */}
-            <div className="p-6 md:p-8 rounded-3xl dark:bg-slate-900/30 bg-white border dark:border-slate-900 border-slate-200 shadow-md space-y-6">
-              <h3 className="text-xl font-bold">{d.appStatusTitle}</h3>
-              
-              <div className="flex items-center gap-5 p-6 rounded-2xl dark:bg-slate-950 bg-slate-100 border dark:border-slate-900 border-slate-200">
-                <div className={`p-3.5 rounded-xl border ${
-                  applicationStatus === 'approved' 
-                    ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-450' 
-                    : 'bg-rose-500/10 border-rose-500/20 text-rose-600'
-                }`}>
-                  <ClipboardList className="w-6 h-6" />
-                </div>
-                <div>
-                  <div className="text-sm font-bold">
-                    {applicationStatus === 'approved' ? d.appApprovedMsg : d.appPendingMsg}
-                  </div>
-                  <div className="text-xs text-slate-500 mt-1">
-                    {applicationStatus === 'approved' ? d.appApprovedDesc : d.appPendingDesc}
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* Help Desk & Dynamic Payment Archive Panel (Right Column) */}

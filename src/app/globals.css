@@ -44,13 +44,21 @@ body {
 
 /* Highly professional A4 Print-to-PDF Rules */
 @media print {
-  body * {
+  /* Hide all web UI elements */
+  body > * {
     visibility: hidden;
   }
-  #printable-contract, #printable-contract * {
+  
+  /* Show student contract OR admin report */
+  #printable-contract,
+  #printable-contract *,
+  .print-report-section,
+  .print-report-section * {
     visibility: visible;
   }
-  #printable-contract {
+  
+  #printable-contract,
+  .print-report-section {
     position: absolute;
     left: 0;
     top: 0;
@@ -61,6 +69,13 @@ body {
     margin: 0;
     font-family: 'Times New Roman', Times, serif !important;
   }
+
+  /* Hide non-printable web layout elements */
+  header, aside, nav, footer,
+  .no-print {
+    display: none !important;
+  }
+
   @page {
     size: A4;
     margin: 20mm 15mm 20mm 15mm;

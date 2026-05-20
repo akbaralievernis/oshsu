@@ -2,8 +2,6 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { updateSession } from '@/utils/supabase/middleware'
 
 export async function proxy(request: NextRequest) {
-  const { supabaseResponse, user, supabase } = await updateSession(request)
-
   const { pathname } = request.nextUrl
 
   // Define protected route prefixes
@@ -11,28 +9,46 @@ export async function proxy(request: NextRequest) {
   const isStudentRoute = pathname.startsWith('/dashboard')
   const isCommandantRoute = pathname.startsWith('/commandant')
   const isAdminRoute = pathname.startsWith('/admin')
+  const isDormitoryRoute = pathname.startsWith('/dormitory')
+
+  // Check custom session cookie first (for Quick Demo Access and local session compatibility)
+  const roleCookie = request.cookies.get('oshsu_role')?.value
+
+  // Check Supabase session in the background
+  let supabaseUser = null
+  let supabaseRole = null
+  try {
+    const { user, supabase } = await updateSession(request)
+    supabaseUser = user
+    if (user && supabase) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+      supabaseRole = profile?.role
+    }
+  } catch (err) {
+    // Ignore error, fallback to cookies
+  }
+
+  // Active Role is either from Supabase or from the custom demo cookie
+  const activeRole = supabaseRole || roleCookie
+  const isLoggedIn = !!supabaseUser || !!roleCookie
 
   // If not logged in and accessing protected pages
-  if (!user && (isStudentRoute || isCommandantRoute || isAdminRoute)) {
+  if (!isLoggedIn && (isStudentRoute || isCommandantRoute || isAdminRoute || isDormitoryRoute)) {
     const loginUrl = new URL('/login', request.url)
     return NextResponse.redirect(loginUrl)
   }
 
   // If logged in, enforce role-based redirects
-  if (user && supabase) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    const role = profile?.role
-
+  if (isLoggedIn) {
     // If logged in and trying to access login page, redirect to correct dashboard
     if (isAuthRoute) {
-      if (role === 'admin') {
+      if (activeRole === 'admin') {
         return NextResponse.redirect(new URL('/admin', request.url))
-      } else if (role === 'commandant') {
+      } else if (activeRole === 'commandant') {
         return NextResponse.redirect(new URL('/commandant', request.url))
       } else {
         return NextResponse.redirect(new URL('/dashboard', request.url))
@@ -40,23 +56,29 @@ export async function proxy(request: NextRequest) {
     }
 
     // Role-specific guards
-    if (isStudentRoute && role !== 'student') {
-      const target = role === 'admin' ? '/admin' : '/commandant'
+    if (isStudentRoute && activeRole !== 'student') {
+      const target = activeRole === 'admin' ? '/admin' : '/commandant'
       return NextResponse.redirect(new URL(target, request.url))
     }
 
-    if (isCommandantRoute && role !== 'commandant') {
-      const target = role === 'admin' ? '/admin' : '/dashboard'
+    if (isCommandantRoute && activeRole !== 'commandant') {
+      const target = activeRole === 'admin' ? '/admin' : '/dashboard'
       return NextResponse.redirect(new URL(target, request.url))
     }
 
-    if (isAdminRoute && role !== 'admin') {
-      const target = role === 'commandant' ? '/commandant' : '/dashboard'
+    if (isAdminRoute && activeRole !== 'admin') {
+      const target = activeRole === 'commandant' ? '/commandant' : '/dashboard'
+      return NextResponse.redirect(new URL(target, request.url))
+    }
+    
+    // Students can only access /dormitory/[id]
+    if (isDormitoryRoute && activeRole !== 'student') {
+      const target = activeRole === 'admin' ? '/admin' : '/commandant'
       return NextResponse.redirect(new URL(target, request.url))
     }
   }
 
-  return supabaseResponse
+  return NextResponse.next()
 }
 
 export const config = {

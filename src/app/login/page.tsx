@@ -9,6 +9,7 @@ import {
   LogIn, UserPlus, Mail, Lock, User, AlertCircle, CheckCircle, 
   Shield, Sun, Moon, Globe, Sparkles
 } from 'lucide-react'
+import { localDb } from '@/utils/localDb'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -29,6 +30,37 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
+
+  const handleDemoLogin = (role: 'student' | 'commandant' | 'admin') => {
+    let email = ''
+    let fullName = ''
+    if (role === 'student') {
+      email = 'student@oshsu.kg'
+      fullName = 'Алиев Тимур Самадович'
+    } else if (role === 'commandant') {
+      email = 'nazira@oshsu.kg'
+      fullName = 'Алиева Назира Бакытовна'
+    } else {
+      email = 'admin@oshsu.kg'
+      fullName = 'Суперадмин ОшМУ'
+    }
+
+    // Set custom session cookie for Next.js middleware
+    document.cookie = `oshsu_role=${role}; path=/; max-age=86400; SameSite=Lax`
+
+    // Set localDb currentUser
+    localDb.setCurrentUser({ email, fullName, role })
+
+    // Redirect
+    if (role === 'admin') {
+      router.push('/admin')
+    } else if (role === 'commandant') {
+      router.push('/commandant')
+    } else {
+      router.push('/dashboard')
+    }
+    router.refresh()
+  }
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -60,7 +92,13 @@ export default function LoginPage() {
           .eq('id', data.user.id)
           .single()
 
-        const role = profile?.role
+        const role = (profile?.role || 'student') as 'student' | 'commandant' | 'admin'
+        const emailVal = data.user.email || ''
+        const nameVal = data.user.user_metadata?.full_name || fullName || 'Пользователь ОшМУ'
+
+        document.cookie = `oshsu_role=${role}; path=/; max-age=86400; SameSite=Lax`
+        localDb.setCurrentUser({ email: emailVal, fullName: nameVal, role })
+
         setTimeout(() => {
           if (role === 'admin') {
             router.push('/admin')
@@ -132,7 +170,13 @@ export default function LoginPage() {
             .eq('id', signInData.user.id)
             .single()
 
-          const role = profile?.role
+          const role = (profile?.role || 'student') as 'student' | 'commandant' | 'admin'
+          const emailVal = signInData.user.email || ''
+          const nameVal = signInData.user.user_metadata?.full_name || fullName || 'Пользователь ОшМУ'
+
+          document.cookie = `oshsu_role=${role}; path=/; max-age=86400; SameSite=Lax`
+          localDb.setCurrentUser({ email: emailVal, fullName: nameVal, role })
+
           setTimeout(() => {
             if (role === 'admin') {
               router.push('/admin')
@@ -371,19 +415,22 @@ export default function LoginPage() {
           </p>
           <div className="grid grid-cols-3 gap-2 pt-1">
             <button 
-              onClick={() => router.push('/dashboard')}
+              type="button"
+              onClick={() => handleDemoLogin('student')}
               className="px-2 py-3 dark:bg-slate-900 bg-slate-100 hover:bg-rose-500/10 hover:border-rose-500/20 border dark:border-slate-800 border-slate-250 text-[10px] font-black rounded-xl transition-all cursor-pointer shadow-sm"
             >
               👩‍🎓 {language === 'kg' ? 'Студент' : language === 'ru' ? 'Студент' : 'Student'}
             </button>
             <button 
-              onClick={() => router.push('/commandant')}
+              type="button"
+              onClick={() => handleDemoLogin('commandant')}
               className="px-2 py-3 dark:bg-slate-900 bg-slate-100 hover:bg-rose-500/10 hover:border-rose-500/20 border dark:border-slate-800 border-slate-250 text-[10px] font-black rounded-xl transition-all cursor-pointer shadow-sm"
             >
               🔑 {language === 'kg' ? 'Комендант' : language === 'ru' ? 'Комендант' : 'Commandant'}
             </button>
             <button 
-              onClick={() => router.push('/admin')}
+              type="button"
+              onClick={() => handleDemoLogin('admin')}
               className="px-2 py-3 dark:bg-slate-900 bg-slate-100 hover:bg-rose-500/10 hover:border-rose-500/20 border dark:border-slate-800 border-slate-250 text-[10px] font-black rounded-xl transition-all cursor-pointer shadow-sm"
             >
               🛡️ {language === 'kg' ? 'Админ' : language === 'ru' ? 'Админ' : 'Admin'}
