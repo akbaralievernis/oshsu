@@ -5,10 +5,10 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
 import { useLanguageAndTheme } from '../LanguageAndThemeContext'
 import { dictionaries } from '@/utils/dictionaries'
-import { 
+import {
   Shield, Landmark, Users, ClipboardList, CheckCircle, AlertCircle, Wrench,
   Check, LogOut, ChevronRight, Sparkles, Phone, UserPlus, Menu, X, Sun, Moon, Globe,
-  ArrowUpRight, HelpCircle, Activity, ShieldCheck, Bell, UserCheck
+  ArrowUpRight, HelpCircle, Activity, ShieldCheck, Bell, UserCheck, RefreshCw
 } from 'lucide-react'
 import { localDb } from '@/utils/localDb'
 
@@ -136,34 +136,36 @@ export default function CommandantDashboard() {
     })
   }, [])
 
-  // Listen for new applications from other tabs (student submits in another window)
+  // Auto-refresh applications every 5 seconds (catches same-tab and cross-tab submissions)
   useEffect(() => {
     if (!myDormId) return
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === 'oshsu_applications') {
-        const updated = localDb.getApplicationsByDorm(myDormId)
-        setApplications(updated)
-        // Push notification for each new pending app
-        const prevIds = applications.map(a => a.id)
-        const newApps = updated.filter(a => !prevIds.includes(a.id) && a.status === 'pending')
+    const refresh = () => {
+      const updated = myDormId ? localDb.getApplicationsByDorm(myDormId) : localDb.getApplications()
+      setApplications(prev => {
+        // Detect new pending apps and fire a notification
+        const prevIds = prev.map((a: any) => a.id)
+        const newApps = updated.filter((a: any) => !prevIds.includes(a.id) && a.status === 'pending')
         if (newApps.length > 0) {
-          setNotifications(prev => [
-            ...newApps.map(app => ({
+          setNotifications(n => [
+            ...newApps.map((app: any) => ({
               id: Date.now().toString() + app.id,
-              textKg: `Жаңы арыз: ${app.studentName} — ${app.dormName}`,
-              textRu: `Новая заявка: ${app.studentName} — ${app.dormName}`,
-              textEn: `New application: ${app.studentName} — ${app.dormName}`,
+              textKg: `🔔 Жаңы арыз: ${app.studentName} (${app.dormName})`,
+              textRu: `🔔 Новая заявка: ${app.studentName} (${app.dormName})`,
+              textEn: `🔔 New application: ${app.studentName} (${app.dormName})`,
               date: 'Жаңы эле',
               read: false
             })),
-            ...prev
+            ...n
           ])
         }
-      }
+        return updated
+      })
     }
-    window.addEventListener('storage', onStorage)
-    return () => window.removeEventListener('storage', onStorage)
-  }, [myDormId, applications])
+    const interval = setInterval(refresh, 5000)
+    // Also fire immediately when myDormId is first resolved
+    refresh()
+    return () => clearInterval(interval)
+  }, [myDormId])
 
   // Keep stats in sync dynamically
   useEffect(() => {
@@ -951,15 +953,25 @@ export default function CommandantDashboard() {
         {/* Tab 4: Student Applications tab */}
         {activeTab === 'applications' && (
           <div className="space-y-6 animate-fadeIn">
-            <div>
-              <h3 className="text-xl font-bold">
-                {language === 'kg' ? 'Студенттердин жатаканага тапшырган арыздары' : language === 'ru' ? 'Заявления студентов на заселение' : 'Student Dormitory Applications'}
-              </h3>
-              {myDormName && (
-                <p className="text-xs text-slate-500 mt-1 font-semibold">
-                  {language === 'kg' ? `Жатакана: ${myDormName}` : language === 'ru' ? `Общежитие: ${myDormName}` : `Dormitory: ${myDormName}`}
-                </p>
-              )}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full">
+              <div>
+                <h3 className="text-xl font-bold">
+                  {language === 'kg' ? 'Студенттердин жатаканага тапшырган арыздары' : language === 'ru' ? 'Заявления студентов на заселение' : 'Student Dormitory Applications'}
+                </h3>
+                {myDormName && (
+                  <p className="text-xs text-slate-500 mt-1 font-semibold">
+                    {language === 'kg' ? `Жатакана: ${myDormName}` : language === 'ru' ? `Общежитие: ${myDormName}` : `Dormitory: ${myDormName}`}
+                    <span className="ml-2 text-emerald-500">● {language === 'kg' ? 'Авто-жаңыртуу: 5 сек' : language === 'ru' ? 'Авто-обновление: 5 сек' : 'Auto-refresh: 5s'}</span>
+                  </p>
+                )}
+              </div>
+              <button
+                onClick={() => setApplications(myDormId ? localDb.getApplicationsByDorm(myDormId) : localDb.getApplications())}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 text-xs font-bold border border-rose-500/20 transition-all cursor-pointer shrink-0"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                {language === 'kg' ? 'Жаңыртуу' : language === 'ru' ? 'Обновить' : 'Refresh'}
+              </button>
             </div>
 
             <div className="dark:bg-slate-900/30 bg-white border dark:border-slate-900 border-slate-200 rounded-3xl overflow-hidden shadow-sm">
