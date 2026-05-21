@@ -7,6 +7,15 @@ export interface UserSession {
   email: string
   fullName: string
   role: 'student' | 'commandant' | 'admin'
+  dormId?: string
+}
+
+export interface StudentAccount {
+  id: string
+  email: string
+  password: string
+  fullName: string
+  createdAt: string
 }
 
 export interface HousingApplication {
@@ -66,6 +75,17 @@ export interface CommandantAccount {
   phone: string
   createdAt: string
 }
+
+// Seeded commandant accounts (auto-populated on first load)
+const SEED_COMMANDANTS: Array<Omit<CommandantAccount, 'id' | 'createdAt'>> = [
+  { fullName: 'Парманова Жылдыз',     email: 'dorm1@oshsu.kg',  password: 'Dorm1@OshSU',  dormId: '1', dormName: '№1 Жатакана', phone: '0773901993' },
+  { fullName: 'Бекболот уулу Дастан', email: 'dorm2a@oshsu.kg', password: 'Dorm2a@OshSU', dormId: '2', dormName: '№2 Жатакана', phone: '0556266793' },
+  { fullName: 'Юлдашев Мырзахмет',   email: 'dorm2b@oshsu.kg', password: 'Dorm2b@OshSU', dormId: '2', dormName: '№2 Жатакана', phone: '0776568485' },
+  { fullName: 'Эрлан',               email: 'dorm4@oshsu.kg',  password: 'Dorm4@OshSU',  dormId: '4', dormName: '№4 Жатакана', phone: '0778937924' },
+  { fullName: 'Боронбаев Бакыт',     email: 'dorm5@oshsu.kg',  password: 'Dorm5@OshSU',  dormId: '5', dormName: '№5 Жатакана', phone: '0707540050' },
+  { fullName: 'Маматов Нурбай',      email: 'dorm6@oshsu.kg',  password: 'Dorm6@OshSU',  dormId: '6', dormName: '№6 Жатакана', phone: '0776619912' },
+  { fullName: 'Тойчуев Дилшат',      email: 'dorm7@oshsu.kg',  password: 'Dorm7@OshSU',  dormId: '7', dormName: '№7 Жатакана', phone: '0778734069' },
+]
 
 // 7 Dormitories Static Data (real OshSU data)
 export const SEVEN_DORMITORIES = [
@@ -503,9 +523,31 @@ function getInitialDormitories(): DormitoryRecord[] {
   ]
 }
 
+// Seed commandant accounts once (version key 'v2')
+const initializeCommandants = () => {
+  if (typeof window === 'undefined') return
+  if (localStorage.getItem('oshsu_commandants_v2')) return
+  const existing: CommandantAccount[] = (() => {
+    try { return JSON.parse(localStorage.getItem('oshsu_commandants') || '[]') } catch { return [] }
+  })()
+  const merged = [...existing]
+  SEED_COMMANDANTS.forEach(seed => {
+    if (!merged.find(c => c.email === seed.email)) {
+      merged.push({
+        ...seed,
+        id: 'seed_' + seed.dormId + '_' + Math.random().toString(36).substr(2, 5),
+        createdAt: '21.05.2026'
+      })
+    }
+  })
+  localStorage.setItem('oshsu_commandants', JSON.stringify(merged))
+  localStorage.setItem('oshsu_commandants_v2', '1')
+}
+
 // Check on import
 if (typeof window !== 'undefined') {
   initializeLocalStorage()
+  initializeCommandants()
 }
 
 export const localDb = {
@@ -644,12 +686,42 @@ export const localDb = {
     return this.getCommandants().find(c => c.email.toLowerCase() === email.toLowerCase()) || null
   },
 
+  // Applications filtered by dormitory
+  getApplicationsByDorm(dormId: string): HousingApplication[] {
+    return this.getApplications().filter(a => a.dormId === dormId)
+  },
+
+  // Student accounts (offline registration)
+  getStudents(): StudentAccount[] {
+    if (typeof window === 'undefined') return []
+    try { return JSON.parse(localStorage.getItem('oshsu_students') || '[]') } catch { return [] }
+  },
+
+  registerStudent(data: { email: string; password: string; fullName: string }): StudentAccount {
+    const students = this.getStudents()
+    const entry: StudentAccount = {
+      id: 'stu_' + Math.random().toString(36).substr(2, 9),
+      email: data.email.toLowerCase().trim(),
+      password: data.password,
+      fullName: data.fullName.trim(),
+      createdAt: new Date().toLocaleDateString('ru-RU')
+    }
+    students.push(entry)
+    localStorage.setItem('oshsu_students', JSON.stringify(students))
+    return entry
+  },
+
+  findStudentByEmail(email: string): StudentAccount | null {
+    return this.getStudents().find(s => s.email.toLowerCase() === email.toLowerCase()) || null
+  },
+
   // Database Reset
   resetDatabase() {
     if (typeof window === 'undefined') return
     localStorage.removeItem('oshsu_applications')
     localStorage.removeItem('oshsu_bookings')
     localStorage.removeItem('oshsu_currentUser')
+    localStorage.removeItem('oshsu_students')
     initializeLocalStorage()
   }
 }

@@ -32,9 +32,9 @@ export default function LoginPage() {
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
   // Built-in system accounts (no Supabase required)
-  const SYSTEM_ACCOUNTS: Record<string, { fullName: string; role: 'admin' | 'commandant' | 'student'; password: string }> = {
+  const SYSTEM_ACCOUNTS: Record<string, { fullName: string; role: 'admin' | 'commandant' | 'student'; password: string; dormId?: string }> = {
     'admin@oshsu.kg':      { fullName: 'Суперадмин ОшМУ',           role: 'admin',      password: 'Admin@OshSU2026' },
-    'commandant@oshsu.kg': { fullName: 'Алиева Назира Бакытовна',   role: 'commandant', password: 'Comm@OshSU2026' },
+    'commandant@oshsu.kg': { fullName: 'Алиева Назира Бакытовна',   role: 'commandant', password: 'Comm@OshSU2026', dormId: '1' },
   }
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -61,7 +61,7 @@ export default function LoginPage() {
           }
           setSuccessMsg(d.authSuccessRedirect)
           document.cookie = `oshsu_role=${sysAccount.role}; path=/; max-age=86400; SameSite=Lax`
-          localDb.setCurrentUser({ email: email.toLowerCase().trim(), fullName: sysAccount.fullName, role: sysAccount.role })
+          localDb.setCurrentUser({ email: email.toLowerCase().trim(), fullName: sysAccount.fullName, role: sysAccount.role, dormId: sysAccount.dormId })
           setTimeout(() => {
             router.push(sysAccount.role === 'admin' ? '/admin' : sysAccount.role === 'commandant' ? '/commandant' : '/dashboard')
             router.refresh()
@@ -79,8 +79,23 @@ export default function LoginPage() {
           }
           setSuccessMsg(d.authSuccessRedirect)
           document.cookie = `oshsu_role=commandant; path=/; max-age=86400; SameSite=Lax`
-          localDb.setCurrentUser({ email: localComm.email, fullName: localComm.fullName, role: 'commandant' })
+          localDb.setCurrentUser({ email: localComm.email, fullName: localComm.fullName, role: 'commandant', dormId: localComm.dormId })
           setTimeout(() => { router.push('/commandant'); router.refresh() }, 800)
+          return
+        }
+
+        // Check locally registered students
+        const localStudent = localDb.findStudentByEmail(email.toLowerCase().trim())
+        if (localStudent) {
+          if (password !== localStudent.password) {
+            setErrorMsg(language === 'kg' ? 'Сыр сөз туура эмес.' : language === 'ru' ? 'Неверный пароль.' : 'Incorrect password.')
+            setLoading(false)
+            return
+          }
+          setSuccessMsg(d.authSuccessRedirect)
+          document.cookie = `oshsu_role=student; path=/; max-age=86400; SameSite=Lax`
+          localDb.setCurrentUser({ email: localStudent.email, fullName: localStudent.fullName, role: 'student' })
+          setTimeout(() => { router.push('/dashboard'); router.refresh() }, 800)
           return
         }
 
@@ -132,13 +147,25 @@ export default function LoginPage() {
 
       } else {
         if (!isSupabaseConfigured()) {
-          setErrorMsg(
-            language === 'kg'
-              ? 'Supabase конфигурацияланган жок. Демо-режимде каттоо мүмкүн эмес.'
-              : language === 'ru'
-              ? 'Supabase не настроен. Регистрация недоступна в демо-режиме.'
-              : 'Supabase is not configured. Registration is unavailable in demo mode.'
+          // Offline local registration — works without Supabase
+          const existingStudent = localDb.findStudentByEmail(email.toLowerCase().trim())
+          if (existingStudent) {
+            setErrorMsg(
+              language === 'kg' ? 'Бул email мурунтан эле катталган.' :
+              language === 'ru' ? 'Этот email уже зарегистрирован.' : 'This email is already registered.'
+            )
+            setLoading(false)
+            return
+          }
+          const newStudent = localDb.registerStudent({ email, password, fullName })
+          localDb.setCurrentUser({ email: newStudent.email, fullName: newStudent.fullName, role: 'student' })
+          document.cookie = `oshsu_role=student; path=/; max-age=86400; SameSite=Lax`
+          setSuccessMsg(
+            language === 'kg' ? 'Каттоо ийгиликтүү! Жеке кабинетке кирүүдөсүз...' :
+            language === 'ru' ? 'Регистрация прошла успешно! Вы войдёте в личный кабинет...' :
+            'Registration successful! Redirecting to your dashboard...'
           )
+          setTimeout(() => { router.push('/dashboard'); router.refresh() }, 900)
           setLoading(false)
           return
         }

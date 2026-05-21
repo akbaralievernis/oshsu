@@ -30,6 +30,8 @@ export default function CommandantDashboard() {
   
   const [activeTab, setActiveTab] = useState<'rooms' | 'tickets' | 'students' | 'applications'>('rooms')
   const [commandantName, setCommandantName] = useState('Комендант')
+  const [myDormId, setMyDormId] = useState<string>('')
+  const [myDormName, setMyDormName] = useState<string>('')
   const [applications, setApplications] = useState<any[]>([])
 
   // Mobile drawer states
@@ -93,8 +95,19 @@ export default function CommandantDashboard() {
     }
     setCommandantName(user.fullName || user.email || 'Комендант')
 
-    // Load dynamic applications from localDb
-    setApplications(localDb.getApplications())
+    // Resolve this commandant's dormitory
+    const commAccount = localDb.findCommandantByEmail(user.email)
+    const dormId = commAccount?.dormId || user.dormId || ''
+    const dormName = commAccount?.dormName || ''
+    setMyDormId(dormId)
+    setMyDormName(dormName)
+
+    // Load applications filtered by this commandant's dormitory
+    if (dormId) {
+      setApplications(localDb.getApplicationsByDorm(dormId))
+    } else {
+      setApplications(localDb.getApplications()) // fallback: show all
+    }
 
     // Load dynamic room residents from localDb bookings
     const allBookings = localDb.getBookings()
@@ -123,6 +136,35 @@ export default function CommandantDashboard() {
     })
   }, [])
 
+  // Listen for new applications from other tabs (student submits in another window)
+  useEffect(() => {
+    if (!myDormId) return
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'oshsu_applications') {
+        const updated = localDb.getApplicationsByDorm(myDormId)
+        setApplications(updated)
+        // Push notification for each new pending app
+        const prevIds = applications.map(a => a.id)
+        const newApps = updated.filter(a => !prevIds.includes(a.id) && a.status === 'pending')
+        if (newApps.length > 0) {
+          setNotifications(prev => [
+            ...newApps.map(app => ({
+              id: Date.now().toString() + app.id,
+              textKg: `Жаңы арыз: ${app.studentName} — ${app.dormName}`,
+              textRu: `Новая заявка: ${app.studentName} — ${app.dormName}`,
+              textEn: `New application: ${app.studentName} — ${app.dormName}`,
+              date: 'Жаңы эле',
+              read: false
+            })),
+            ...prev
+          ])
+        }
+      }
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [myDormId, applications])
+
   // Keep stats in sync dynamically
   useEffect(() => {
     const totalOccupied = rooms.reduce((acc, r) => acc + r.occupied, 0)
@@ -139,7 +181,7 @@ export default function CommandantDashboard() {
   // Action handlers
   const handleUpdateAppStatus = (appId: string, status: 'approved' | 'rejected') => {
     localDb.updateApplicationStatus(appId, status)
-    setApplications(localDb.getApplications())
+    setApplications(myDormId ? localDb.getApplicationsByDorm(myDormId) : localDb.getApplications())
 
     const app = localDb.getApplications().find(a => a.id === appId)
     if (app) {
@@ -352,7 +394,7 @@ export default function CommandantDashboard() {
                 </div>
                 <div>
                   <div className="text-sm font-bold">{commandantName}</div>
-                  <div className="text-xs text-slate-555">{d.commandant}</div>
+                  <div className="text-xs text-slate-555">{myDormName ? `${myDormName} коменданты` : d.commandant}</div>
                 </div>
               </div>
 
@@ -516,7 +558,7 @@ export default function CommandantDashboard() {
               </div>
               <div className="truncate">
                 <div className="text-sm font-bold truncate">{commandantName}</div>
-                <div className="text-xs text-slate-500">Башкы комендант</div>
+                <div className="text-xs text-slate-500">{myDormName ? `${myDormName} коменданты` : 'Башкы комендант'}</div>
               </div>
             </div>
 
@@ -909,9 +951,16 @@ export default function CommandantDashboard() {
         {/* Tab 4: Student Applications tab */}
         {activeTab === 'applications' && (
           <div className="space-y-6 animate-fadeIn">
-            <h3 className="text-xl font-bold">
-              {language === 'kg' ? 'Студенттердин жатаканага тапшырган арыздары' : language === 'ru' ? 'Заявления студентов на заселение' : 'Student Dormitory Applications'}
-            </h3>
+            <div>
+              <h3 className="text-xl font-bold">
+                {language === 'kg' ? 'Студенттердин жатаканага тапшырган арыздары' : language === 'ru' ? 'Заявления студентов на заселение' : 'Student Dormitory Applications'}
+              </h3>
+              {myDormName && (
+                <p className="text-xs text-slate-500 mt-1 font-semibold">
+                  {language === 'kg' ? `Жатакана: ${myDormName}` : language === 'ru' ? `Общежитие: ${myDormName}` : `Dormitory: ${myDormName}`}
+                </p>
+              )}
+            </div>
 
             <div className="dark:bg-slate-900/30 bg-white border dark:border-slate-900 border-slate-200 rounded-3xl overflow-hidden shadow-sm">
               <div className="w-full overflow-x-auto">
